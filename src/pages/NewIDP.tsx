@@ -33,6 +33,7 @@ export default function NewIDP() {
         plan_year: data.plan_year,
         status: data.status,
         notes: data.notes,
+        milestone_count: data.milestone_count ?? 4,
       });
 
       // Create items

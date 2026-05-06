@@ -9,12 +9,33 @@ import type { PlanWithItems, QuarterlyMilestone } from './types';
 const TEAL = '0D9488';
 const TEAL_LIGHT = 'CCFBF1';
 const HEADER_BG = '115E59';
+const APP_NAME = "Paul Selby's IDP Tool";
+
+// ─── Milestone label helpers ──────────────────────────────────────────────────
+
+function mlabel(p: number, total: number): string {
+  switch (total) {
+    case 2:  return `H${p}`;
+    case 3:  return `T${p}`;
+    case 4:  return `Q${p}`;
+    case 6:  return `B${p}`;
+    case 12: return `M${p}`;
+    default: return `P${p}`;
+  }
+}
+
+function periods(count: number): number[] {
+  return Array.from({ length: count }, (_, i) => i + 1);
+}
 
 // ─── Excel Export ─────────────────────────────────────────────────────────────
 
 export async function exportToExcelBuffer(plan: PlanWithItems): Promise<Buffer> {
+  const mCount = plan.milestone_count ?? 4;
+  const ps = periods(mCount);
+
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'IDP Manager';
+  workbook.creator = APP_NAME;
   workbook.created = new Date();
 
   // Sheet 1: Plan Overview
@@ -33,7 +54,6 @@ export async function exportToExcelBuffer(plan: PlanWithItems): Promise<Buffer> 
     },
   };
 
-  // Style header row
   ['A1', 'B1'].forEach(cell => {
     Object.assign(overviewSheet.getCell(cell), { style: headerStyle });
   });
@@ -46,6 +66,7 @@ export async function exportToExcelBuffer(plan: PlanWithItems): Promise<Buffer> 
     ['Plan Date', plan.plan_date],
     ['Plan Year', String(plan.plan_year)],
     ['Status', plan.status],
+    ['Milestone Periods', String(mCount)],
     ['Notes', plan.notes],
   ];
 
@@ -57,26 +78,23 @@ export async function exportToExcelBuffer(plan: PlanWithItems): Promise<Buffer> 
     row.getCell(1).font = { bold: true };
   });
 
-  // Sheet 2: Development Items
+  // Sheet 2: Development Items — dynamic milestone columns
   const itemsSheet = workbook.addWorksheet('Development Items');
-  itemsSheet.columns = [
-    { header: 'Item #', key: 'num', width: 8 },
-    { header: 'Description', key: 'description', width: 40 },
-    { header: 'Due Date', key: 'due_date', width: 12 },
-    { header: 'Support Needed', key: 'support', width: 25 },
-    { header: 'Q1 Status', key: 'q1_status', width: 15 },
-    { header: 'Q1 %', key: 'q1_pct', width: 8 },
-    { header: 'Q1 Notes', key: 'q1_notes', width: 20 },
-    { header: 'Q2 Status', key: 'q2_status', width: 15 },
-    { header: 'Q2 %', key: 'q2_pct', width: 8 },
-    { header: 'Q2 Notes', key: 'q2_notes', width: 20 },
-    { header: 'Q3 Status', key: 'q3_status', width: 15 },
-    { header: 'Q3 %', key: 'q3_pct', width: 8 },
-    { header: 'Q3 Notes', key: 'q3_notes', width: 20 },
-    { header: 'Q4 Status', key: 'q4_status', width: 15 },
-    { header: 'Q4 %', key: 'q4_pct', width: 8 },
-    { header: 'Q4 Notes', key: 'q4_notes', width: 20 },
+
+  const fixedCols: Partial<ExcelJS.Column>[] = [
+    { header: 'Item #',         key: 'num',         width: 8 },
+    { header: 'Description',    key: 'description', width: 40 },
+    { header: 'Due Date',       key: 'due_date',     width: 12 },
+    { header: 'Support Needed', key: 'support',      width: 25 },
   ];
+
+  const milestoneCols: Partial<ExcelJS.Column>[] = ps.flatMap(p => [
+    { header: `${mlabel(p, mCount)} Status`, key: `p${p}_status`, width: 15 },
+    { header: `${mlabel(p, mCount)} %`,      key: `p${p}_pct`,    width: 8 },
+    { header: `${mlabel(p, mCount)} Notes`,  key: `p${p}_notes`,  width: 20 },
+  ]);
+
+  itemsSheet.columns = [...fixedCols, ...milestoneCols];
 
   // Style header row
   const headerRow = itemsSheet.getRow(1);
@@ -90,32 +108,21 @@ export async function exportToExcelBuffer(plan: PlanWithItems): Promise<Buffer> 
   headerRow.height = 30;
 
   plan.items.forEach((item, idx) => {
-    const getMilestone = (q: number) =>
-      item.milestones.find((m: QuarterlyMilestone) => m.quarter === q);
-
-    const q1 = getMilestone(1);
-    const q2 = getMilestone(2);
-    const q3 = getMilestone(3);
-    const q4 = getMilestone(4);
-
-    const row = itemsSheet.addRow({
+    const rowData: Record<string, unknown> = {
       num: idx + 1,
       description: item.item_description,
       due_date: item.due_date,
       support: item.support_needed,
-      q1_status: q1?.status ?? 'Not Started',
-      q1_pct: q1?.percent_complete ?? 0,
-      q1_notes: q1?.notes ?? '',
-      q2_status: q2?.status ?? 'Not Started',
-      q2_pct: q2?.percent_complete ?? 0,
-      q2_notes: q2?.notes ?? '',
-      q3_status: q3?.status ?? 'Not Started',
-      q3_pct: q3?.percent_complete ?? 0,
-      q3_notes: q3?.notes ?? '',
-      q4_status: q4?.status ?? 'Not Started',
-      q4_pct: q4?.percent_complete ?? 0,
-      q4_notes: q4?.notes ?? '',
+    };
+
+    ps.forEach(p => {
+      const m = item.milestones.find((ms: QuarterlyMilestone) => ms.quarter === p);
+      rowData[`p${p}_status`] = m?.status ?? 'Not Started';
+      rowData[`p${p}_pct`]    = m?.percent_complete ?? 0;
+      rowData[`p${p}_notes`]  = m?.notes ?? '';
     });
+
+    const row = itemsSheet.addRow(rowData);
 
     if (idx % 2 === 0) {
       row.eachCell(cell => {
@@ -133,6 +140,8 @@ export async function exportToExcelBuffer(plan: PlanWithItems): Promise<Buffer> 
 // ─── Word Export ──────────────────────────────────────────────────────────────
 
 export async function exportToWordBuffer(plan: PlanWithItems): Promise<Buffer> {
+  const mCount = plan.milestone_count ?? 4;
+  const ps = periods(mCount);
   const employee = plan.employee;
 
   const makeCell = (text: string, bold = false, bgColor?: string): TableCell => {
@@ -148,7 +157,6 @@ export async function exportToWordBuffer(plan: PlanWithItems): Promise<Buffer> {
 
   const headerCell = (text: string): TableCell => makeCell(text, true, HEADER_BG);
 
-  // Build development items tables
   const itemTables: (Paragraph | Table)[] = [];
 
   plan.items.forEach((item, idx) => {
@@ -182,23 +190,23 @@ export async function exportToWordBuffer(plan: PlanWithItems): Promise<Buffer> {
     itemTables.push(infoTable);
     itemTables.push(new Paragraph({ text: '', spacing: { before: 60 } }));
 
-    // Milestone rows
+    // Milestone rows — dynamic
     const milestoneTable = new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [
         new TableRow({
           children: [
-            headerCell('Quarter'),
+            headerCell('Period'),
             headerCell('Status'),
             headerCell('% Complete'),
             headerCell('Notes'),
           ],
         }),
-        ...[1, 2, 3, 4].map(q => {
-          const m = item.milestones.find((ms: QuarterlyMilestone) => ms.quarter === q);
+        ...ps.map(p => {
+          const m = item.milestones.find((ms: QuarterlyMilestone) => ms.quarter === p);
           return new TableRow({
             children: [
-              makeCell(`Q${q}`, true),
+              makeCell(mlabel(p, mCount), true),
               makeCell(m?.status ?? 'Not Started'),
               makeCell(m ? `${m.percent_complete}%` : '0%'),
               makeCell(m?.notes ?? ''),
@@ -232,7 +240,7 @@ export async function exportToWordBuffer(plan: PlanWithItems): Promise<Buffer> {
     sections: [{
       children: [
         new Paragraph({
-          text: 'Healthcare IDP System',
+          text: APP_NAME,
           heading: HeadingLevel.HEADING_1,
           alignment: AlignmentType.CENTER,
         }),
@@ -254,6 +262,7 @@ export async function exportToWordBuffer(plan: PlanWithItems): Promise<Buffer> {
             new TableRow({ children: [headerCell('Plan Date'), makeCell(plan.plan_date)] }),
             new TableRow({ children: [headerCell('Plan Year'), makeCell(String(plan.plan_year))] }),
             new TableRow({ children: [headerCell('Status'), makeCell(plan.status)] }),
+            new TableRow({ children: [headerCell('Milestone Periods'), makeCell(String(mCount))] }),
             new TableRow({ children: [headerCell('Notes'), makeCell(plan.notes)] }),
           ],
         }),
@@ -277,11 +286,12 @@ export async function exportToWordBuffer(plan: PlanWithItems): Promise<Buffer> {
 // ─── PDF Export ───────────────────────────────────────────────────────────────
 
 export async function exportToPdfBuffer(plan: PlanWithItems): Promise<Buffer> {
-  // Use jspdf + jspdf-autotable via require (CommonJS Electron main process)
+  const mCount = plan.milestone_count ?? 4;
+  const ps = periods(mCount);
+
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const jspdfMod = require('jspdf') as { jsPDF?: typeof import('jspdf').jsPDF; default?: { jsPDF?: typeof import('jspdf').jsPDF } };
   const jsPDF = (jspdfMod.jsPDF ?? jspdfMod.default?.jsPDF) as typeof import('jspdf').jsPDF;
-  // jspdf-autotable v5: autoTable is a named export function(doc, options)
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const atModule = require('jspdf-autotable') as { autoTable?: (doc: unknown, options: unknown) => void; default?: (doc: unknown, options: unknown) => void } & ((doc: unknown, options: unknown) => void);
   const autoTable = (atModule.autoTable ?? atModule.default ?? atModule) as (doc: unknown, options: unknown) => void;
@@ -292,13 +302,13 @@ export async function exportToPdfBuffer(plan: PlanWithItems): Promise<Buffer> {
   const TEAL_RGB: [number, number, number] = [13, 148, 136];
   const HEADER_RGB: [number, number, number] = [17, 94, 89];
 
-  // Header
+  // Header banner
   doc.setFillColor(...TEAL_RGB);
   doc.rect(0, 0, pageW, 20, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.setTextColor(255, 255, 255);
-  doc.text('Healthcare IDP System — Individual Development Plan', pageW / 2, 13, { align: 'center' });
+  doc.text(`${APP_NAME} — Individual Development Plan`, pageW / 2, 13, { align: 'center' });
 
   doc.setTextColor(0, 0, 0);
   let y = 28;
@@ -314,7 +324,8 @@ export async function exportToPdfBuffer(plan: PlanWithItems): Promise<Buffer> {
     ['Employee Name', plan.employee?.name ?? '', 'Manager', plan.employee?.manager_name ?? ''],
     ['Job Title', plan.employee?.job_title ?? '', 'Department', plan.employee?.department ?? ''],
     ['Plan Date', plan.plan_date, 'Plan Year', String(plan.plan_year)],
-    ['Status', plan.status, 'Notes', plan.notes],
+    ['Status', plan.status, 'Milestone Periods', String(mCount)],
+    ['Notes', plan.notes, '', ''],
   ];
 
   autoTable(doc, {
@@ -331,34 +342,33 @@ export async function exportToPdfBuffer(plan: PlanWithItems): Promise<Buffer> {
 
   y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-  // Development Items
+  // Development Items — dynamic milestone columns
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(...HEADER_RGB);
   doc.text('Development Items', 14, y);
   y += 6;
 
+  const milestoneHeaders = ps.flatMap(p => [
+    `${mlabel(p, mCount)} Status`,
+    `${mlabel(p, mCount)}%`,
+  ]);
+
   const itemHeaders = [
-    ['#', 'Description', 'Due Date', 'Support Needed',
-      'Q1 Status', 'Q1%', 'Q2 Status', 'Q2%', 'Q3 Status', 'Q3%', 'Q4 Status', 'Q4%'],
+    ['#', 'Description', 'Due Date', 'Support Needed', ...milestoneHeaders],
   ];
 
   const itemRows = plan.items.map((item, idx) => {
-    const getMilestone = (q: number) =>
-      item.milestones.find((m: QuarterlyMilestone) => m.quarter === q);
-    const q1 = getMilestone(1);
-    const q2 = getMilestone(2);
-    const q3 = getMilestone(3);
-    const q4 = getMilestone(4);
+    const milestoneValues = ps.flatMap(p => {
+      const m = item.milestones.find((ms: QuarterlyMilestone) => ms.quarter === p);
+      return [m?.status ?? 'Not Started', m ? `${m.percent_complete}%` : '0%'];
+    });
     return [
       String(idx + 1),
       item.item_description,
       item.due_date,
       item.support_needed,
-      q1?.status ?? 'Not Started', q1 ? `${q1.percent_complete}%` : '0%',
-      q2?.status ?? 'Not Started', q2 ? `${q2.percent_complete}%` : '0%',
-      q3?.status ?? 'Not Started', q3 ? `${q3.percent_complete}%` : '0%',
-      q4?.status ?? 'Not Started', q4 ? `${q4.percent_complete}%` : '0%',
+      ...milestoneValues,
     ];
   });
 
@@ -390,7 +400,7 @@ export async function exportToPdfBuffer(plan: PlanWithItems): Promise<Buffer> {
     doc.setFontSize(8);
     doc.setTextColor(150);
     doc.text(
-      `Generated by Healthcare IDP System — Page ${i} of ${pageCount}`,
+      `Generated by ${APP_NAME} — Page ${i} of ${pageCount}`,
       pageW / 2,
       doc.internal.pageSize.getHeight() - 5,
       { align: 'center' }

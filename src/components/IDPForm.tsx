@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Employee, PlanCreate, ItemCreate, PlanStatus } from '../types';
+import { MILESTONE_PRESETS } from '../utils/milestoneLabels';
 
 export interface NewIDPFormData {
   employee_id: number;
@@ -7,6 +8,7 @@ export interface NewIDPFormData {
   plan_year: number;
   status: PlanStatus;
   notes: string;
+  milestone_count: number;
   items: Array<{
     item_description: string;
     due_date: string;
@@ -30,6 +32,7 @@ export default function IDPForm({ employees, initialEmployeeId, onSubmit, onCanc
   const [planYear, setPlanYear] = useState(() => new Date().getFullYear());
   const [status, setStatus] = useState<PlanStatus>('Active');
   const [notes, setNotes] = useState('');
+  const [milestoneCount, setMilestoneCount] = useState(4);
   const [items, setItems] = useState([emptyItem()]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -57,6 +60,7 @@ export default function IDPForm({ employees, initialEmployeeId, onSubmit, onCanc
       plan_year: planYear,
       status,
       notes,
+      milestone_count: milestoneCount,
       items: items.filter(i => i.item_description.trim()),
     });
   };
@@ -128,6 +132,19 @@ export default function IDPForm({ employees, initialEmployeeId, onSubmit, onCanc
               min="2000" max="2100"
             />
           </div>
+          <div className="col-span-2">
+            <label className="label">Milestone Periods</label>
+            <select
+              className="input"
+              value={milestoneCount}
+              onChange={e => setMilestoneCount(Number(e.target.value))}
+            >
+              {MILESTONE_PRESETS.map(p => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Choose how many tracking periods each development item will have (can be changed later).</p>
+          </div>
         </div>
         <div>
           <label className="label">Notes</label>
@@ -171,7 +188,7 @@ export default function IDPForm({ employees, initialEmployeeId, onSubmit, onCanc
                   rows={2}
                   value={item.item_description}
                   onChange={e => updateItem(idx, 'item_description', e.target.value)}
-                  placeholder="Describe the development activity..."
+                  placeholder="e.g. Obtain CISSP certification, lead incident response tabletop, complete cloud security training..."
                 />
                 {errors[`item_${idx}`] && <p className="text-red-500 text-xs mt-1">{errors[`item_${idx}`]}</p>}
               </div>
@@ -192,7 +209,7 @@ export default function IDPForm({ employees, initialEmployeeId, onSubmit, onCanc
                     className="input"
                     value={item.support_needed}
                     onChange={e => updateItem(idx, 'support_needed', e.target.value)}
-                    placeholder="Manager, training budget, etc."
+                    placeholder="e.g. study materials, lab access, manager coaching"
                   />
                 </div>
               </div>

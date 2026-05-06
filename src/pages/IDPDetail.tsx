@@ -7,6 +7,7 @@ import type {
 import { MilestoneCell } from '../components/MilestoneTracker';
 import ExportButtons from '../components/ExportButtons';
 import FileMenuBar from '../components/FileMenuBar';
+import { milestoneColumnHeader, milestonePeriods, MILESTONE_PRESETS } from '../utils/milestoneLabels';
 
 interface EditItemModal {
   item: DevelopmentItemWithMilestones;
@@ -115,7 +116,7 @@ function AddItemForm({ planId, sortOrder, onSaved, onCancel }: AddItemFormProps)
           rows={2}
           value={desc}
           onChange={e => setDesc(e.target.value)}
-          placeholder="New development item..."
+          placeholder="e.g. Complete Security+ certification, learn threat modeling..."
           autoFocus
         />
         {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
@@ -149,6 +150,7 @@ export default function IDPDetail() {
   const [editingPlanStatus, setEditingPlanStatus] = useState(false);
   const [planStatus, setPlanStatus] = useState<PlanStatus>('Active');
   const [planNotes, setPlanNotes] = useState('');
+  const [planMilestoneCount, setPlanMilestoneCount] = useState(4);
   const [currentFilePath, setCurrentFilePath] = useState<string | undefined>();
 
   const load = useCallback(async () => {
@@ -160,6 +162,7 @@ export default function IDPDetail() {
       setPlan(data);
       setPlanStatus(data.status);
       setPlanNotes(data.notes);
+      setPlanMilestoneCount(data.milestone_count ?? 4);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -204,7 +207,7 @@ export default function IDPDetail() {
 
   const handleSavePlanDetails = async () => {
     if (!plan || !window.api) return;
-    await window.api.plans.update(plan.id, { status: planStatus, notes: planNotes });
+    await window.api.plans.update(plan.id, { status: planStatus, notes: planNotes, milestone_count: planMilestoneCount });
     setEditingPlanStatus(false);
     load();
   };
@@ -310,6 +313,18 @@ export default function IDPDetail() {
               </select>
             </div>
             <div>
+              <label className="label">Milestone Periods</label>
+              <select
+                className="input"
+                value={planMilestoneCount}
+                onChange={e => setPlanMilestoneCount(Number(e.target.value))}
+              >
+                {MILESTONE_PRESETS.map(p => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
               <label className="label">Notes</label>
               <input
                 type="text"
@@ -354,10 +369,11 @@ export default function IDPDetail() {
                   <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Development Item</th>
                   <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Due Date</th>
                   <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">Support Needed</th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">Q1</th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">Q2</th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">Q3</th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">Q4</th>
+                  {milestonePeriods(plan.milestone_count ?? 4).map(p => (
+                    <th key={p} className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-32">
+                      {milestoneColumnHeader(p, plan.milestone_count ?? 4)}
+                    </th>
+                  ))}
                   <th className="px-3 py-3 w-20"></th>
                 </tr>
               </thead>
@@ -377,12 +393,13 @@ export default function IDPDetail() {
                       </td>
                       <td className="px-3 py-3 text-gray-500 text-xs">{item.support_needed || '—'}</td>
 
-                      {([1, 2, 3, 4] as Quarter[]).map(q => (
+                      {milestonePeriods(plan.milestone_count ?? 4).map((p: Quarter) => (
                         <MilestoneCell
-                          key={q}
+                          key={p}
                           itemId={item.id}
-                          quarter={q}
-                          milestone={getMilestone(q)}
+                          quarter={p}
+                          milestone={getMilestone(p)}
+                          periodLabel={milestoneColumnHeader(p, plan.milestone_count ?? 4)}
                           onSave={handleMilestoneSave}
                         />
                       ))}

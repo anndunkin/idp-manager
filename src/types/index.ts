@@ -24,6 +24,8 @@ export interface DevelopmentPlan {
   plan_year: number;
   status: PlanStatus;
   notes: string;
+  /** Number of milestone periods (e.g. 4 = quarterly, 12 = monthly). Default 4. */
+  milestone_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -50,7 +52,8 @@ export type ItemUpdate = Partial<Omit<ItemCreate, 'plan_id'>>;
 // ─── Quarterly Milestones ─────────────────────────────────────────────────────
 
 export type MilestoneStatus = 'Not Started' | 'In Progress' | 'Complete';
-export type Quarter = 1 | 2 | 3 | 4;
+/** Milestone period number — 1-based, supports 1–12 */
+export type Quarter = number;
 
 export interface QuarterlyMilestone {
   id: number;

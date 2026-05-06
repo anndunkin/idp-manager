@@ -43,14 +43,15 @@ export function initSchema(database: Database.Database): void {
     );
 
     CREATE TABLE IF NOT EXISTS development_plans (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      employee_id INTEGER NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-      plan_date   TEXT    NOT NULL,
-      plan_year   INTEGER NOT NULL,
-      status      TEXT    NOT NULL DEFAULT 'Active' CHECK(status IN ('Active','Inactive','Complete')),
-      notes       TEXT    NOT NULL DEFAULT '',
-      created_at  DATETIME DEFAULT (datetime('now')),
-      updated_at  DATETIME DEFAULT (datetime('now'))
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      employee_id      INTEGER NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+      plan_date        TEXT    NOT NULL,
+      plan_year        INTEGER NOT NULL,
+      status           TEXT    NOT NULL DEFAULT 'Active' CHECK(status IN ('Active','Inactive','Complete')),
+      notes            TEXT    NOT NULL DEFAULT '',
+      milestone_count  INTEGER NOT NULL DEFAULT 4 CHECK(milestone_count BETWEEN 1 AND 52),
+      created_at       DATETIME DEFAULT (datetime('now')),
+      updated_at       DATETIME DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS development_items (
@@ -67,7 +68,7 @@ export function initSchema(database: Database.Database): void {
     CREATE TABLE IF NOT EXISTS quarterly_milestones (
       id               INTEGER PRIMARY KEY AUTOINCREMENT,
       item_id          INTEGER NOT NULL REFERENCES development_items(id) ON DELETE CASCADE,
-      quarter          INTEGER NOT NULL CHECK(quarter IN (1,2,3,4)),
+      quarter          INTEGER NOT NULL CHECK(quarter BETWEEN 1 AND 52),
       status           TEXT    NOT NULL DEFAULT 'Not Started' CHECK(status IN ('Not Started','In Progress','Complete')),
       percent_complete INTEGER NOT NULL DEFAULT 0 CHECK(percent_complete BETWEEN 0 AND 100),
       notes            TEXT    NOT NULL DEFAULT '',
@@ -75,6 +76,14 @@ export function initSchema(database: Database.Database): void {
       UNIQUE(item_id, quarter)
     );
   `);
+
+  // ─── Migrations for existing databases ───────────────────────────────────────
+  // Add milestone_count if it doesn't exist (safe to run every time)
+  const cols = database.prepare(`PRAGMA table_info(development_plans)`).all() as Array<{ name: string }>;
+  const hasMilestoneCount = cols.some(c => c.name === 'milestone_count');
+  if (!hasMilestoneCount) {
+    database.exec(`ALTER TABLE development_plans ADD COLUMN milestone_count INTEGER NOT NULL DEFAULT 4`);
+  }
 }
 
 // ─── Employee CRUD ────────────────────────────────────────────────────────────
@@ -160,14 +169,15 @@ export function planCreate(database: Database.Database, data: PlanCreate): Devel
   if (!data.employee_id) throw new Error('Employee ID is required');
 
   const result = database.prepare(`
-    INSERT INTO development_plans (employee_id, plan_date, plan_year, status, notes)
-    VALUES (@employee_id, @plan_date, @plan_year, @status, @notes)
+    INSERT INTO development_plans (employee_id, plan_date, plan_year, status, notes, milestone_count)
+    VALUES (@employee_id, @plan_date, @plan_year, @status, @notes, @milestone_count)
   `).run({
     employee_id: data.employee_id,
     plan_date: data.plan_date.trim(),
     plan_year: data.plan_year ?? new Date(data.plan_date).getFullYear(),
     status: data.status ?? 'Active',
     notes: (data.notes ?? '').trim(),
+    milestone_count: data.milestone_count ?? 4,
   });
 
   return database.prepare('SELECT * FROM development_plans WHERE id = ?').get(result.lastInsertRowid) as DevelopmentPlan;
@@ -182,12 +192,13 @@ export function planUpdate(database: Database.Database, id: number, data: PlanUp
     plan_year: data.plan_year ?? existing.plan_year,
     status: data.status ?? existing.status,
     notes: ((data.notes ?? existing.notes) ?? '').trim(),
+    milestone_count: data.milestone_count ?? existing.milestone_count ?? 4,
   };
 
   database.prepare(`
     UPDATE development_plans
     SET plan_date = @plan_date, plan_year = @plan_year, status = @status,
-        notes = @notes, updated_at = datetime('now')
+        notes = @notes, milestone_count = @milestone_count, updated_at = datetime('now')
     WHERE id = @id
   `).run({ ...merged, id });
 

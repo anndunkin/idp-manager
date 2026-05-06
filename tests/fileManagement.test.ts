@@ -37,7 +37,7 @@ function buildFilePayload(db: Database.Database, planId: number): IdpFilePayload
     version: IDP_FILE_VERSION,
     savedAt: new Date().toISOString(),
     employee: { name: employee.name, manager_name: employee.manager_name, job_title: employee.job_title, department: employee.department },
-    plan: { plan_date: plan.plan_date, plan_year: plan.plan_year, status: plan.status as 'Active' | 'Inactive' | 'Complete', notes: plan.notes },
+    plan: { plan_date: plan.plan_date, plan_year: plan.plan_year, status: plan.status as 'Active' | 'Inactive' | 'Complete', notes: plan.notes, milestone_count: (plan as unknown as { milestone_count: number }).milestone_count ?? 4 },
     items: fileItems,
   };
 }
@@ -53,8 +53,8 @@ function importFilePayload(db: Database.Database, payload: IdpFilePayload): numb
   }
 
   const planResult = db.prepare(
-    `INSERT INTO development_plans (employee_id, plan_date, plan_year, status, notes) VALUES (?, ?, ?, ?, ?)`
-  ).run(emp.id, payload.plan.plan_date, payload.plan.plan_year, payload.plan.status, payload.plan.notes ?? '');
+    `INSERT INTO development_plans (employee_id, plan_date, plan_year, status, notes, milestone_count) VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(emp.id, payload.plan.plan_date, payload.plan.plan_year, payload.plan.status, payload.plan.notes ?? '', payload.plan.milestone_count ?? 4);
   const planId = Number(planResult.lastInsertRowid);
 
   for (const item of payload.items) {

@@ -69,8 +69,8 @@ export default function NavBar() {
             <circle cx="16" cy="16" r="10" stroke="white" strokeWidth="1.5" strokeOpacity="0.4" />
           </svg>
           <div>
-            <div className="text-white font-bold text-base leading-tight">IDP Manager</div>
-            <div className="text-primary-300 text-xs">Healthcare</div>
+            <div className="text-white font-bold text-sm leading-tight">Paul Selby's IDP Tool</div>
+            <div className="text-primary-300 text-xs">Cybersecurity</div>
           </div>
         </div>
       </div>

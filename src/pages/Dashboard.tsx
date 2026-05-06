@@ -110,7 +110,7 @@ export default function Dashboard() {
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Individual Development Plan overview</p>
+        <p className="text-gray-500 text-sm mt-1">Cybersecurity team development plan overview</p>
       </div>
 
       {/* Stats cards */}

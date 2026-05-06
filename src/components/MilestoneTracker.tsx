@@ -5,6 +5,8 @@ interface MilestoneCell {
   itemId: number;
   quarter: Quarter;
   milestone?: QuarterlyMilestone;
+  /** Label to show in the cell title, e.g. "Q1", "M3", "H2" */
+  periodLabel?: string;
   onSave: (data: { item_id: number; quarter: Quarter; status: MilestoneStatus; percent_complete: number; notes: string }) => Promise<void>;
 }
 
@@ -16,7 +18,8 @@ function statusBadgeClass(status: MilestoneStatus) {
   }
 }
 
-export function MilestoneCell({ itemId, quarter, milestone, onSave }: MilestoneCell) {
+export function MilestoneCell({ itemId, quarter, milestone, periodLabel, onSave }: MilestoneCell) {
+  const label = periodLabel ?? `Q${quarter}`;
   const [editing, setEditing] = useState(false);
   const [status, setStatus] = useState<MilestoneStatus>(milestone?.status ?? 'Not Started');
   const [percent, setPercent] = useState(milestone?.percent_complete ?? 0);
@@ -101,7 +104,7 @@ export function MilestoneCell({ itemId, quarter, milestone, onSave }: MilestoneC
       <button
         onClick={() => setEditing(true)}
         className="flex flex-col items-center gap-1 w-full hover:bg-gray-50 rounded p-1 transition-colors"
-        title={`Q${quarter}: ${currentStatus} (${currentPct}%)`}
+        title={`${label}: ${currentStatus} (${currentPct}%)`}
       >
         <span className={statusBadgeClass(currentStatus)}>
           {currentStatus === 'Not Started' ? 'Not Started' :

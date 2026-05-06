@@ -29,6 +29,7 @@ function logError(msg: string): void {
 
 function createWindow(): void {
   const win = new BrowserWindow({
+    title: "Paul Selby's IDP Tool",
     width: 1280,
     height: 800,
     minWidth: 900,
@@ -194,7 +195,7 @@ function buildFilePayload(planId: number): IdpFilePayload {
   const db = getDatabase();
   const plan = db.prepare(
     `SELECT * FROM development_plans WHERE id = ?`
-  ).get(planId) as { id: number; employee_id: number; plan_date: string; plan_year: number; status: string; notes: string };
+  ).get(planId) as { id: number; employee_id: number; plan_date: string; plan_year: number; status: string; notes: string; milestone_count: number };
   if (!plan) throw new Error('Plan not found');
 
   const employee = db.prepare(
@@ -234,6 +235,7 @@ function buildFilePayload(planId: number): IdpFilePayload {
       plan_year: plan.plan_year,
       status: plan.status as 'Active' | 'Inactive' | 'Complete',
       notes: plan.notes,
+      milestone_count: plan.milestone_count ?? 4,
     },
     items: fileItems,
   };
@@ -274,14 +276,15 @@ function importFilePayload(payload: IdpFilePayload): number {
 
   // Always create a new plan (a file open is a new version / copy)
   const planResult = db.prepare(
-    `INSERT INTO development_plans (employee_id, plan_date, plan_year, status, notes)
-     VALUES (?, ?, ?, ?, ?)`
+    `INSERT INTO development_plans (employee_id, plan_date, plan_year, status, notes, milestone_count)
+     VALUES (?, ?, ?, ?, ?, ?)`
   ).run(
     emp.id,
     payload.plan.plan_date,
     payload.plan.plan_year,
     payload.plan.status,
-    payload.plan.notes ?? ''
+    payload.plan.notes ?? '',
+    payload.plan.milestone_count ?? 4
   );
   const planId = Number(planResult.lastInsertRowid);
 
