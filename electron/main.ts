@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import {
@@ -128,54 +128,58 @@ ipcMain.handle('milestones:upsert', (_e, data: MilestoneUpsert) => milestoneUpse
 
 // ─── Export Handlers ──────────────────────────────────────────────────────────
 
-async function saveExportFile(
-  win: BrowserWindow,
+function saveExportFile(
   defaultName: string,
-  ext: string,
   buffer: Buffer
-): Promise<{ success: boolean; filePath?: string; error?: string }> {
-  const { canceled, filePath } = await dialog.showSaveDialog(win, {
-    defaultPath: defaultName,
-    filters: [{ name: ext.toUpperCase(), extensions: [ext] }],
-  });
-  if (canceled || !filePath) return { success: false };
+): { success: boolean; filePath?: string; error?: string } {
+  // Save directly to the user's Downloads folder and open immediately —
+  // no save dialog shown.
+  const downloadsDir = app.getPath('downloads');
+  // Ensure a unique filename if one already exists
+  let filePath = path.join(downloadsDir, defaultName);
+  if (fs.existsSync(filePath)) {
+    const ext = path.extname(defaultName);
+    const base = path.basename(defaultName, ext);
+    let n = 1;
+    while (fs.existsSync(filePath)) {
+      filePath = path.join(downloadsDir, `${base} (${n})${ext}`);
+      n++;
+    }
+  }
   fs.writeFileSync(filePath, buffer);
   shell.openPath(filePath);
   return { success: true, filePath };
 }
 
-ipcMain.handle('export:toExcel', async (event, planId: number) => {
+ipcMain.handle('export:toExcel', async (_event, planId: number) => {
   try {
-    const win = BrowserWindow.fromWebContents(event.sender)!;
     const planData = planGetById(getDatabase(), planId);
     if (!planData) throw new Error('Plan not found');
     const { exportToExcelBuffer } = await import('./exportMain');
     const buffer = await exportToExcelBuffer(planData);
     const name = `IDP_${planData.employee?.name ?? 'Plan'}_${planData.plan_year}`.replace(/\s+/g, '_');
-    return saveExportFile(win, `${name}.xlsx`, 'xlsx', buffer);
+    return saveExportFile(`${name}.xlsx`, buffer);
   } catch (err) { return { success: false, error: String(err) }; }
 });
 
-ipcMain.handle('export:toWord', async (event, planId: number) => {
+ipcMain.handle('export:toWord', async (_event, planId: number) => {
   try {
-    const win = BrowserWindow.fromWebContents(event.sender)!;
     const planData = planGetById(getDatabase(), planId);
     if (!planData) throw new Error('Plan not found');
     const { exportToWordBuffer } = await import('./exportMain');
     const buffer = await exportToWordBuffer(planData);
     const name = `IDP_${planData.employee?.name ?? 'Plan'}_${planData.plan_year}`.replace(/\s+/g, '_');
-    return saveExportFile(win, `${name}.docx`, 'docx', buffer);
+    return saveExportFile(`${name}.docx`, buffer);
   } catch (err) { return { success: false, error: String(err) }; }
 });
 
-ipcMain.handle('export:toPdf', async (event, planId: number) => {
+ipcMain.handle('export:toPdf', async (_event, planId: number) => {
   try {
-    const win = BrowserWindow.fromWebContents(event.sender)!;
     const planData = planGetById(getDatabase(), planId);
     if (!planData) throw new Error('Plan not found');
     const { exportToPdfBuffer } = await import('./exportMain');
     const buffer = await exportToPdfBuffer(planData);
     const name = `IDP_${planData.employee?.name ?? 'Plan'}_${planData.plan_year}`.replace(/\s+/g, '_');
-    return saveExportFile(win, `${name}.pdf`, 'pdf', buffer);
+    return saveExportFile(`${name}.pdf`, buffer);
   } catch (err) { return { success: false, error: String(err) }; }
 });
