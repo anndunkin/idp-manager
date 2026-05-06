@@ -19,23 +19,24 @@ module.exports = {
   npmRebuild: false,
   afterPack: "./scripts/afterPack.js",
   win: {
-    target: [{ target: "nsis", arch: ["x64"] }],
+    target: [
+      { target: "zip", arch: ["x64"] },
+      { target: "nsis", arch: ["x64"] }
+    ],
     icon: "assets/icon.ico",
     requestedExecutionLevel: "asInvoker",
     forceCodeSigning: false,
     signAndEditExecutable: false
   },
   nsis: {
-    // Assisted (non-oneClick): shows a progress window, respects customInit path override
     oneClick: false,
-    allowToChangeInstallationDirectory: false,
+    allowToChangeInstallationDirectory: true,
     perMachine: false,
     allowElevation: false,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
     shortcutName: "IDP Manager",
     deleteAppDataOnUninstall: false,
-    // Custom macros: sets $INSTDIR to $EXEDIR\IDP Manager in customInit
     include: "scripts/installer.nsh"
   },
   mac: {
