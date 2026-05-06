@@ -228,7 +228,7 @@ Key configuration files:
 
 - `vite.config.ts` — Vite config for the renderer. Sets `base: './'` for Electron's file:// protocol and aliases `@/` to `src/`.
 - `tsconfig.electron.json` — TypeScript config for the main process and preload script. Targets Node 18 / CommonJS.
-- `electron-builder.config.js` — electron-builder config. Specifies `appId`, `productName`, `win.target` (`nsis`), `asar: true`, `files` glob patterns, and the output directory.
+- `electron-builder.config.js` — electron-builder config. Specifies `appId`, `productName`, `win.target` (`nsis`), `asar: true`, `files` glob patterns, and the output directory. The NSIS installer is configured with `oneClick: true` and `perMachine: false` for a silent one-click install to the current user's `%LocalAppData%\Programs` folder with no wizard dialogs and no admin elevation required.
 
 ---
 

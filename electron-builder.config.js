@@ -7,15 +7,21 @@ module.exports = {
   win: {
     target: [{ target: "nsis", arch: ["x64"] }],
     icon: "assets/icon.ico",
-    signingHashAlgorithms: ["sha256"],
-    sign: null
+    requestedExecutionLevel: "asInvoker",
+    forceCodeSigning: false,
+    signAndEditExecutable: false,
+    signtoolOptions: {
+      signingHashAlgorithms: ["sha256"]
+    }
   },
   nsis: {
-    oneClick: false,
-    allowToChangeInstallationDirectory: true,
+    oneClick: true,
+    perMachine: false,
+    allowElevation: true,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    shortcutName: "IDP Manager"
+    shortcutName: "IDP Manager",
+    deleteAppDataOnUninstall: false
   },
   mac: {
     target: "dmg",

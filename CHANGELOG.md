@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1] - 2026-05-06
+### Changed
+- Installer updated to one-click silent install (`oneClick: true`) — app installs automatically to the current user's AppData folder with no wizard dialogs, consistent with other IDP Manager companion apps
+- Added `perMachine: false` so install does not require admin elevation
+- Added `deleteAppDataOnUninstall: false` to preserve user data on uninstall
+- Aligned win32 signing config with standard self-signed build pipeline (`forceCodeSigning: false`, `signAndEditExecutable: false`)
+
 ## [1.0.0] - 2026-05-06
 ### Added
 - Initial release

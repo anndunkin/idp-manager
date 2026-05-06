@@ -30,7 +30,7 @@ IDP Manager is a cross-platform desktop application for creating, tracking, and 
 
 1. Download `IDP Manager Setup.exe` from the [Releases](https://github.com/anndunkin/idp-manager/releases) page.
 2. Double-click the installer. If Windows SmartScreen appears, click **More info → Run anyway** (the installer is self-signed).
-3. Follow the setup wizard. The app installs to `%LocalAppData%\Programs\IDP Manager` by default.
+3. The app installs automatically — no wizard dialogs. It installs to `%LocalAppData%\Programs\IDP Manager` for the current user (no admin rights required) and creates a desktop shortcut and Start Menu entry.
 4. Launch **IDP Manager** from the Start menu or the desktop shortcut.
 
 ---
