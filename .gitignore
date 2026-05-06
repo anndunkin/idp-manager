@@ -8,3 +8,5 @@ electron/dist/
 .DS_Store
 dist-installer/
 dist/
+certs/signing.key
+certs/signing.pfx
