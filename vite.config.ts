@@ -27,6 +27,9 @@ export default defineConfig({
     environmentMatchGlobs: [
       ['tests/database.test.ts', 'node'],
       ['tests/exports.test.ts', 'node'],
+      ['tests/fileManagement.test.ts', 'node'],
+      ['tests/milestoneLabels.test.ts', 'node'],
+      ['tests/security.test.ts', 'node'],
     ],
     alias: [
       { find: 'electron', replacement: '/home/user/workspace/idp-manager/tests/__mocks__/electron.ts' },

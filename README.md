@@ -1,115 +1,100 @@
-# IDP Manager
+# Paul Selby's IDP Tool
 
-IDP Manager is a cross-platform desktop application for creating, tracking, and exporting Individual Development Plans (IDPs). Built with Electron, React, and SQLite, it gives managers a structured way to document employee development goals, assign quarterly milestones, record progress, and generate polished reports — all stored locally on the user's machine.
+A desktop application for creating and tracking **Individual Development Plans** for cybersecurity and technical teams.
 
-![Tests](https://img.shields.io/badge/Tests-49%20Passing-brightgreen) ![License](https://img.shields.io/badge/License-MIT-blue) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey) ![Security](https://img.shields.io/badge/Security-Audited-green)
+**Version:** 1.0.8 | **Platform:** Windows 10/11 x64 | **Stack:** Electron · React · TypeScript · SQLite
 
 ---
 
 ## Features
 
-- **Employee Management** — Add, edit, and remove employees with name, manager, job title, and department fields.
-- **IDP Creation & Editing** — Create Individual Development Plans for any employee, with plan date, status, and supporting notes.
-- **Development Items with Due Dates & Support Tracking** — Attach one or more development items to each plan, each with a description, due date, and a "support needed" field.
-- **Quarterly Milestone Tracking (Q1–Q4)** — Each development item has four quarterly milestone cells. Click any cell to set a status (Not Started / In Progress / Complete), a completion percentage (0–100%), and free-form notes.
-- **Report Export to Excel, Word, and PDF** — Generate formatted reports in `.xlsx` (two-sheet workbook), `.docx` (formal document), or PDF (printable layout). Files are saved to the user's Downloads folder.
-- **Local SQLite Storage** — All data is stored in a SQLite database on the user's own machine; nothing is transmitted over a network.
-- **Self-Signed Installer** — Ships as a self-signed `.exe` installer for Windows, built with electron-builder.
-
----
-
-## Screenshots
-
-> Screenshots coming soon.
+- **Employee profiles** — name, manager, job title, department
+- **Development plans** — plan date, year, status, notes
+- **Development items** — descriptions, due dates, support needed, drag-to-reorder
+- **Configurable milestone periods** — 2 (semi-annual), 3 (thirds), 4 (quarterly), 6 (bi-monthly), or 12 (monthly)
+- **Milestone tracking** — status (Not Started / In Progress / Complete), % complete, notes
+- **File management** — Save, Save As, and Open `.idp` files (portable JSON snapshots)
+- **Exports** — Excel, Word, and PDF reports with dynamic milestone columns
+- **Auto-open exports** — exported files open immediately in the default application
+- **Keyboard shortcut** — Ctrl+S to save the current plan
+- **Cascade deletes** — deleting an employee/plan removes all descendant records
+- **Backward-compatible migrations** — existing databases from older versions are upgraded automatically
 
 ---
 
 ## Installation
 
-### Windows
+Download one of the release deliverables:
 
-1. Download `IDP Manager Setup.exe` from the [Releases](https://github.com/anndunkin/idp-manager/releases) page.
-2. Double-click the installer. If Windows SmartScreen appears, click **More info → Run anyway** (the installer is self-signed).
-3. The app installs automatically — no wizard dialogs. It installs to `%LocalAppData%\Programs\IDP Manager` for the current user (no admin rights required) and creates a desktop shortcut and Start Menu entry.
-4. Launch **IDP Manager** from the Start menu or the desktop shortcut.
-
----
-
-## Development Setup
-
-### Prerequisites
-
-- Node.js 18 or higher
-- npm
-
-```bash
-git clone https://github.com/anndunkin/idp-manager
-cd idp-manager
-npm install
-npm run dev
-```
-
-`npm run dev` starts the Vite dev server and opens the Electron window with hot-module replacement enabled.
-
----
-
-## Building the Installer
-
-```bash
-npm run build
-npm run electron:build
-# Output: dist-installer/IDP Manager Setup.exe
-```
-
-`npm run build` bundles the React renderer via Vite and compiles the Electron main process with `tsc`. `npm run electron:build` then packages everything into a self-signed Windows installer using electron-builder.
-
----
-
-## Running Tests
-
-```bash
-npm run test
-```
-
-Runs the full Vitest suite (49 tests) covering database CRUD operations, export format correctness, and React component behaviour.
-
----
-
-## Security
-
-IDP Manager applies defence-in-depth across every layer of the Electron stack:
-
-| Measure | Details |
+| File | Description |
 |---|---|
-| `nodeIntegration: false` | Node.js APIs are not exposed to renderer web content. |
-| `contextIsolation: true` | The preload script runs in an isolated context; renderer JS cannot access Electron or Node globals. |
-| Content Security Policy | A strict CSP header is set on all renderer windows, blocking inline scripts and unauthorised resource origins. |
-| Parameterised SQL | All database queries use `better-sqlite3` prepared statements; user input is never interpolated into SQL strings. |
-| `asar` packaging | Application source is packaged into an asar archive, making casual inspection and tampering harder. |
-| Self-signed installer | The installer is signed with a self-generated certificate. Users are advised to verify the SHA-256 checksum published on the Releases page. |
+| `IDP Manager-1.0.8-win.zip` | Extract and run `IDP Manager.exe` directly |
+| `IDP Manager Setup 1.0.8.exe` | Installer — runs through a setup wizard |
+
+> **First launch:** Windows SmartScreen may show a warning. Click **More info → Run anyway**. This is expected for a self-signed certificate.
 
 ---
 
-## Tech Stack
+## Quick Start
+
+1. Launch the app
+2. Click **+ New Employee** and fill in the employee details
+3. Click **+ New IDP** to create a development plan
+4. Choose a **Milestone Periods** setting (default: 4 quarterly)
+5. Add development items with descriptions, due dates, and support needed
+6. Track progress by clicking the edit icon in any milestone cell
+7. Export to Excel, Word, or PDF via the Export buttons
+
+---
+
+## Milestone Presets
+
+| Value | Labels | Description |
+|---|---|---|
+| 2 | H1, H2 | Semi-annual |
+| 3 | T1, T2, T3 | Thirds |
+| **4** | **Q1–Q4** | **Quarterly (default)** |
+| 6 | B1–B6 | Bi-monthly |
+| 12 | M1–M12 | Monthly |
+
+---
+
+## Documentation
+
+- [User Guide](docs/USER_GUIDE.md) — Installation, features, and how-to instructions
+- [Technical Documentation](docs/TECHNICAL.md) — Architecture, schema, IPC API, build pipeline
+
+---
+
+## Development
+
+```bash
+npm install         # Install dependencies
+npm run dev         # Run in development mode
+npx vitest run      # Run test suite (144 tests)
+npm run build       # Production build
+```
+
+### Tech Stack
 
 | Layer | Technology |
 |---|---|
-| UI Framework | React 18 + TypeScript |
-| Build Tool | Vite |
-| Desktop Runtime | Electron 28+ |
-| Database | SQLite (better-sqlite3) |
-| Styling | Tailwind CSS |
-| Testing | Vitest |
-| Packaging | electron-builder |
+| Shell | Electron 41.5.0 |
+| UI | React 18 + TypeScript |
+| Bundler | Vite 5 |
+| Styles | Tailwind CSS |
+| Database | better-sqlite3 12.9.0 (SQLite) |
+| Tests | Vitest + @testing-library/react |
 
 ---
 
-## Data Storage
+## Repository
 
-All application data is stored in a SQLite database located in the user's platform-specific application data folder (`AppData\Roaming\idp-manager` on Windows, `~/Library/Application Support/idp-manager` on macOS, `~/.config/idp-manager` on Linux). Data is **never transmitted** to any remote server.
+- **GitHub:** https://github.com/anndunkin/idp-manager (private)
+- **Related apps:** [timetrack-app](https://github.com/anndunkin/timetrack-app) · [dga-invoice-generator](https://github.com/anndunkin/dga-invoice-generator) · [expense-tracker](https://github.com/anndunkin/expense-tracker)
 
 ---
 
-## License
+## Changelog
 
-MIT © Ann Dunkin
+See [CHANGELOG.md](CHANGELOG.md) for version history.

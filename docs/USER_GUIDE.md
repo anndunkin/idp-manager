@@ -1,206 +1,316 @@
-# IDP Manager — User Guide
+# Paul Selby's IDP Tool — User Guide
 
-## Introduction
+**Version:** 1.0.8  
+**Platform:** Windows 10/11 (x64)
 
-IDP Manager is a desktop application designed to help managers at healthcare organisations create and track Individual Development Plans (IDPs) for their direct reports. An IDP is a structured document that captures an employee's professional development goals, the concrete actions needed to achieve them, and measurable progress milestones across each quarter of the year.
+---
 
-With IDP Manager you can:
+## Table of Contents
 
-- Maintain a roster of employees and their reporting information.
-- Create one or more development plans per employee.
-- Break each plan into specific development items with due dates and support requirements.
-- Track progress against quarterly milestones (Q1–Q4) for every development item.
-- Export polished reports in Excel, Word, or PDF format to share with HR or leadership.
+1. [What Is This Tool?](#what-is-this-tool)
+2. [Installation](#installation)
+3. [Getting Started](#getting-started)
+4. [Creating an Employee Profile](#creating-an-employee-profile)
+5. [Creating a Development Plan](#creating-a-development-plan)
+6. [Configuring Milestone Periods](#configuring-milestone-periods)
+7. [Working with Development Items](#working-with-development-items)
+8. [Tracking Milestone Progress](#tracking-milestone-progress)
+9. [File Management — Save, Save As, Open](#file-management--save-save-as-open)
+10. [Exporting Reports](#exporting-reports)
+11. [Editing and Updating Plans](#editing-and-updating-plans)
+12. [Deleting Records](#deleting-records)
+13. [Dashboard Overview](#dashboard-overview)
+14. [Keyboard Shortcuts](#keyboard-shortcuts)
+15. [Troubleshooting](#troubleshooting)
 
-Everything runs locally on your computer. No account or internet connection is required.
+---
+
+## What Is This Tool?
+
+Paul Selby's IDP Tool is a desktop application for creating and tracking **Individual Development Plans (IDPs)** for employees in cybersecurity and technical roles. It helps managers:
+
+- Document each team member's development goals
+- Define concrete action items with due dates and support requirements
+- Track progress across configurable time periods (quarterly, monthly, semi-annual, etc.)
+- Export professional reports in Excel, Word, or PDF format
+- Save and reopen plans as portable `.idp` files
+
+All data is stored locally on your computer. No internet connection is required after installation.
+
+---
+
+## Installation
+
+### From the ZIP File (Recommended)
+
+1. Download `IDP Manager-1.0.8-win.zip`
+2. Right-click the ZIP and select **Extract All...**
+3. Choose a destination folder (e.g., `C:\Tools\IDP Manager`)
+4. Open the extracted `win-unpacked` folder
+5. Double-click **IDP Manager.exe** to launch
+
+> **Windows Security Warning:** On first launch, Windows Defender SmartScreen may display "Windows protected your PC." This is expected because the app uses a self-signed certificate. Click **More info**, then **Run anyway** to proceed.
+
+### From the Installer
+
+1. Download `IDP Manager Setup 1.0.8.exe`
+2. Double-click the installer and follow the prompts
+3. The app will be installed and a shortcut placed on your Desktop
 
 ---
 
 ## Getting Started
 
-### Installing the App (Windows)
+When you first launch the app, you will see the **Dashboard** — an overview of all employees and plans in the system. The sidebar on the left contains:
 
-1. Download `IDP Manager Setup.exe` from the link provided by your IT department or from the project's Releases page.
-2. Double-click the installer file.
-3. If a **Windows SmartScreen** warning appears, click **More info**, then **Run anyway**. This message appears because the installer uses a self-signed certificate; the software itself is safe to install.
-4. Follow the on-screen setup wizard. Accept the default installation location unless you have a specific reason to change it.
-5. Click **Finish** when the wizard completes. A shortcut is placed on your desktop and in the Start menu.
-
-### First Launch
-
-Open IDP Manager from the Start menu or desktop shortcut. On the first launch the application creates a fresh local database; no data is pre-loaded. You will land on the **Dashboard**, which will be empty until you add employees.
+- **Dashboard** — Main overview
+- **+ New Employee** — Add a new employee
+- **+ New IDP** — Create a new development plan
+- **Open File** — Open a saved `.idp` file
 
 ---
 
-## Managing Employees
+## Creating an Employee Profile
 
-The **Employees** section is the starting point for all IDP work. Every development plan is linked to an employee record.
+Before creating a development plan, add the employee to the system.
 
-### Adding an Employee
+1. Click **+ New Employee** in the sidebar
+2. Fill in:
+   - **Full Name** (required)
+   - **Manager Name** (required)
+   - **Job Title** (e.g., Security Analyst, SOC Engineer)
+   - **Department** (e.g., Cybersecurity Operations, Threat Intelligence)
+3. Click **Save**
 
-1. Click **Employees** in the left navigation panel.
-2. Click the **Add Employee** button (top-right of the employee list).
-3. Fill in the following fields:
-   - **Name** — Employee's full name (required).
-   - **Manager Name** — The employee's direct manager (required).
-   - **Job Title** — The employee's current role.
-   - **Department** — The team or department the employee belongs to.
-4. Click **Save**. The employee appears in the list immediately.
-
-### Editing an Employee
-
-1. Locate the employee in the list.
-2. Click the **Edit** (pencil) icon on the employee's row.
-3. Update any fields and click **Save**.
-
-### Deleting an Employee
-
-1. Locate the employee in the list.
-2. Click the **Delete** (trash) icon on the employee's row.
-3. Confirm the deletion in the prompt that appears.
-
-> **Note:** Deleting an employee also permanently deletes all associated development plans, development items, and milestone records. This action cannot be undone.
+The employee will now appear in the Dashboard employee list.
 
 ---
 
-## Creating an IDP
+## Creating a Development Plan
 
-An Individual Development Plan captures the overall intent and context for an employee's development in a given period.
-
-### Creating a New Plan
-
-1. Navigate to **Employees** and click the employee's name to open their profile.
-2. Click **New Development Plan**.
-3. Complete the plan form:
-   - **Plan Date** — The date the plan is being created or the period it covers.
-   - **Status** — The current state of the plan (e.g., *Draft*, *Active*, *Complete*).
-   - **Notes** — Any high-level context, goals, or background for the plan.
-4. Click **Save Plan**. The plan is created and you are taken to the plan detail view.
-
-### Editing an Existing Plan
-
-1. Open the employee's profile.
-2. Click the plan you want to edit from the plan list.
-3. Click **Edit Plan**, update the fields, and click **Save Plan**.
+1. Click **+ New IDP** in the sidebar, or click **Create New Plan** on an employee's profile
+2. Select the employee from the dropdown (or it will be pre-selected if you came from a profile)
+3. Fill in the **Plan Details**:
+   - **Plan Date** — The start date of this development plan
+   - **Plan Year** — The calendar year this plan covers
+   - **Status** — Active, Inactive, or Complete
+   - **Notes** — Any general notes about the plan
+   - **Milestone Periods** — Choose how many tracking periods to use (see below)
+4. Add at least one **Development Item** (see next section)
+5. Click **Create IDP**
 
 ---
 
-## Development Items
+## Configuring Milestone Periods
 
-Development items are the individual actions, training activities, or projects that make up a plan. Each item is tracked independently across quarters.
+When creating a plan, you choose how many milestone tracking periods it will use. This setting cannot be changed after the plan is created.
 
-### What Is a Development Item?
+| Selection | Periods | Column Labels | Best For |
+|---|---|---|---|
+| 2 — Semi-Annual | 2 | H1, H2 | Year-end reviews with a mid-year check |
+| 3 — Thirds | 3 | T1, T2, T3 | Three-term tracking cycles |
+| **4 — Quarterly** | **4** | **Q1, Q2, Q3, Q4** | **Default — most common** |
+| 6 — Bi-Monthly | 6 | B1–B6 | Bi-monthly program reviews |
+| 12 — Monthly | 12 | M1–M12 | High-cadence monthly coaching |
 
-A development item is a discrete, actionable goal within the broader IDP. Examples include completing an online course, shadowing a senior colleague, presenting at a team meeting, or obtaining a certification.
-
-### Adding a Development Item
-
-1. Open a plan in the plan detail view.
-2. Click **Add Development Item**.
-3. Fill in the fields:
-   - **Description** — A clear statement of the goal or activity (required).
-   - **Due Date** — The target completion date for this item.
-   - **Support Needed** — Any resources, budget, time off, or manager involvement required.
-4. Click **Save Item**. The item is added to the plan's item list.
-
-### Reordering Development Items
-
-Development items can be reordered by dragging them within the list:
-
-1. Hover over the drag handle (the grip icon on the left side of an item row).
-2. Click and hold, then drag the item to the desired position.
-3. Release to drop. The new order is saved automatically.
+**Example for cybersecurity teams:** A threat intelligence analyst working toward a GIAC certification might use quarterly (Q1–Q4) milestones to align with training cycles. A SOC engineer following a 12-month remediation roadmap might use monthly (M1–M12) milestones for tighter visibility.
 
 ---
 
-## Quarterly Milestone Tracking
+## Working with Development Items
 
-Each development item has four quarterly milestone cells — **Q1**, **Q2**, **Q3**, and **Q4** — displayed as a row in the plan view. Milestones let you record incremental progress and notes at the end of each quarter.
+Development items are the specific goals, skills, or certifications the employee is working toward.
 
-### Editing a Milestone
+### Adding Items
 
-1. Locate the development item in the plan detail view.
-2. Click on any quarterly cell (Q1, Q2, Q3, or Q4) in that item's row. A milestone editor opens.
-3. Set the following fields:
-   - **Status** — Choose one of:
-     - *Not Started* — No work has begun.
-     - *In Progress* — Work is underway.
-     - *Complete* — The milestone has been achieved.
-   - **Percentage** — Enter a number from **0** to **100** reflecting how much of the overall development item is complete at the end of this quarter.
-   - **Notes** — Free-form text for observations, blockers, or context about this quarter's progress.
-4. Click **Save**. The cell updates to reflect the new status and percentage.
+Each plan starts with one item row. To add more:
+- Click **+ Add Item** at the bottom of the Development Items section
 
-### Reading the Milestone Grid
+### Item Fields
 
-The milestone grid gives a quick visual summary:
+| Field | Description |
+|---|---|
+| **Description** | What the employee will accomplish (e.g., "Earn CompTIA Security+ certification") |
+| **Due Date** | Target completion date |
+| **Support Needed** | Resources required (e.g., "Training budget, study time allocation, exam fee") |
 
-- Cells are colour-coded by status (grey = Not Started, yellow = In Progress, green = Complete).
-- The percentage figure is shown inside each cell.
-- Hover over a cell to see the full notes in a tooltip.
+### Reordering Items
+
+Drag the handle on the left side of any item row to reorder items. The order is saved automatically.
+
+---
+
+## Tracking Milestone Progress
+
+After a plan is created, you can track progress in each milestone period.
+
+1. Navigate to the plan by clicking on it from the Dashboard or employee profile
+2. In the plan detail view, each development item has milestone columns (Q1–Q4, M1–M12, etc.)
+3. Click the **edit button** (pencil icon) in any milestone cell to update progress
+
+### Milestone Fields
+
+| Field | Options |
+|---|---|
+| **Status** | Not Started / In Progress / Complete |
+| **% Complete** | 0–100 |
+| **Notes** | Free-text notes for this period |
+
+### Status Color Coding
+
+- **Not Started** — Gray
+- **In Progress** — Yellow/Amber
+- **Complete** — Green
+
+---
+
+## File Management — Save, Save As, Open
+
+Plans can be saved to portable `.idp` files. This lets you archive plans, share them with others, or back them up outside the database.
+
+### Save (Ctrl+S)
+
+**Saves the current plan to its known file path.** If the plan has never been saved to a file, it will prompt you to choose a location (same as Save As).
+
+- Use the **Save** button in the plan toolbar, or
+- Press **Ctrl+S** (Windows) / **Cmd+S** (macOS)
+
+### Save As
+
+**Always prompts you to choose a file name and location.**
+
+1. Click **Save As** in the plan toolbar
+2. Choose a folder and enter a file name (e.g., `alice-smith-2026-plan.idp`)
+3. Click **Save**
+
+### Open File
+
+**Opens a saved `.idp` file and imports it as a new plan in your database.**
+
+1. Click **Open File** in the left sidebar (available from any screen), or
+2. Click **Open** in any plan's toolbar
+3. Browse to the `.idp` file and click **Open**
+
+The plan is imported — if the employee already exists in the database (matched by name + manager name), the plan is linked to that employee. Otherwise, a new employee record is created.
+
+> **Note:** Opening a file always creates a new plan entry in the database. It does not overwrite any existing plan.
+
+### File Format
+
+`.idp` files are JSON text files. They capture the complete state of the plan: employee details, plan metadata, all development items, and all milestone data. The `milestone_count` value is preserved, so a 12-period monthly plan imported on another machine will still show 12 columns.
 
 ---
 
 ## Exporting Reports
 
-IDP Manager can export a development plan as a formatted report in three file formats.
+From any plan detail view, use the **Export** buttons to generate formatted reports:
 
-### Export Formats
+| Button | Output | Opens Automatically |
+|---|---|---|
+| **Excel** | `.xlsx` spreadsheet | Yes — opens in Excel |
+| **Word** | `.docx` document | Yes — opens in Word |
+| **PDF** | `.pdf` file | Yes — opens in your PDF viewer |
 
-| Format | Description |
-|---|---|
-| **Excel (.xlsx)** | A two-sheet workbook. Sheet 1 ("Plan Overview") contains the employee info, plan date, status, and notes. Sheet 2 ("Development Items") lists every item with its due date, support needed, and all four quarterly milestone statuses, percentages, and notes. |
-| **Word (.docx)** | A formal document suitable for HR filing or printing. Includes the employee's details, plan summary, and a table for each development item with its quarterly milestones. |
-| **PDF** | A print-ready version of the Word layout, formatted for A4/Letter paper. |
+Reports are saved to your **Downloads** folder with a timestamped filename (e.g., `Alice-Smith-IDP-2026-05-06T14-30-00.xlsx`).
 
-### How to Export
-
-1. Open the plan you want to export.
-2. Click the **Export** button in the top-right of the plan detail view.
-3. Choose your preferred format: **Excel**, **Word**, or **PDF**.
-4. The file is generated and automatically saved to your **Downloads** folder.
-5. A confirmation message will show the exact file name and location.
-
----
-
-## Dashboard
-
-The **Dashboard** is the home screen of IDP Manager. It provides an at-a-glance overview of your team's development activity.
-
-### Summary Cards
-
-Four summary cards appear at the top of the Dashboard:
-
-| Card | What It Shows |
-|---|---|
-| **Total Employees** | The total number of employee records in the database. |
-| **Active Plans** | The number of development plans with an *Active* status. |
-| **Plans Due This Quarter** | The number of active plans whose target date falls within the current calendar quarter. |
-| **Completion Rate** | The average milestone completion percentage across all active plans. |
-
-### Employee Table
-
-Below the summary cards is a table listing every employee. Each row shows:
-
-- Employee name and job title.
-- Department and manager name.
-- Number of active development plans.
-- A **progress bar** representing the average completion percentage across all quarterly milestones in the employee's active plans.
-
-Click any employee row to jump directly to that employee's profile and plan list.
-
-### Search and Filter
-
-- Use the **search box** at the top of the table to filter employees by name, department, or job title in real time.
-- Use the **filter dropdown** to narrow the list by department or by plan status.
+All exports include:
+- Employee name, manager, job title, department
+- Plan date, year, status, and notes
+- All development items with due dates and support needed
+- All milestone columns, labeled with the plan's period labels (Q1–Q4, M1–M12, etc.)
+- Status, percent complete, and notes for each milestone
 
 ---
 
-## Tips
+## Editing and Updating Plans
 
-1. **Start with Q1 goals.** When creating a new IDP, add development items with Q1 milestones already filled in so both you and the employee have clear, near-term targets from day one.
+### Edit Plan Details
 
-2. **Export before every review meeting.** Export the plan to PDF or Word and share it with the employee ahead of your quarterly review conversation. Having a document in hand helps keep the discussion focused.
+From the plan detail view, click **Edit Plan** to update:
+- Plan date, year, and status
+- Notes
+- Development item descriptions, due dates, and support needed
 
-3. **Use "Support Needed" proactively.** Filling in the "Support Needed" field for each development item makes it easy to identify budget requests or scheduling needs before they become blockers.
+> **Note:** The Milestone Periods setting cannot be changed after a plan is created. If you need a different period count, create a new plan.
 
-4. **Back up your data regularly.** Your data lives in a local SQLite database in your AppData folder. Copy this file to a shared drive or backup location periodically so you don't lose records if your computer is replaced. See the Technical Documentation for the exact file path.
+### Update Milestone Progress
+
+Click the edit button in any milestone cell at any time to update status, percentage, and notes.
+
+---
+
+## Deleting Records
+
+> **Warning:** Deletions are permanent and cascade. Deleting an employee also deletes all their plans, items, and milestones.
+
+### Delete a Milestone Entry
+
+Click the edit button on a milestone cell, then click **Delete** (if available).
+
+### Delete a Development Item
+
+Click the **Delete** (trash) icon on the item row. This also removes all milestone data for that item.
+
+### Delete a Plan
+
+From the plan detail view, click the plan menu and select **Delete Plan**. This removes the plan, all its items, and all milestones.
+
+### Delete an Employee
+
+From the employee profile, click **Delete Employee**. This removes the employee and all associated plans, items, and milestones.
+
+---
+
+## Dashboard Overview
+
+The Dashboard shows:
+- **Total Employees** in the system
+- **Active Plans** count
+- **Plans Due This Quarter**
+- **Overall Completion Rate** (average across all plans)
+
+Below the stats, the employee list shows each employee with their most recent plan status and a summary completion bar.
+
+Click any employee name to view their profile and all associated plans.
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| **Ctrl+S** | Save current plan to its known file path |
+
+---
+
+## Troubleshooting
+
+### "Windows protected your PC" on launch
+
+This is normal for a self-signed application. Click **More info** then **Run anyway**.
+
+### The app opens but shows a blank window
+
+This may happen if the `resources/app.asar` file is missing or corrupted. Re-extract the ZIP to a fresh folder and try again.
+
+### A plan I opened doesn't show all its milestone columns
+
+The `.idp` file may have been created with a different `milestone_count`. The number of columns is controlled by the value stored in the file. Verify the file was saved from a v1.0.8 build of the app.
+
+### Exports don't open automatically
+
+The auto-open feature uses your default application for `.xlsx`, `.docx`, and `.pdf`. If no default is set, check your Windows file associations for these formats.
+
+### The database seems to be missing data after a computer restart
+
+The database is stored at:
+```
+C:\Users\<YourName>\AppData\Roaming\idp-manager\idp-manager.db
+```
+The `AppData` folder is hidden by default. To view it, open File Explorer and type `%APPDATA%\idp-manager` in the address bar.
+
+### How do I back up my data?
+
+Either:
+1. Copy the database file from `%APPDATA%\idp-manager\idp-manager.db` to a backup location, or
+2. Use **Save As** on each plan to export `.idp` files, which can be re-imported at any time
