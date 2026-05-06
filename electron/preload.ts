@@ -32,6 +32,11 @@ const api: WindowApi = {
     toWord: (planId) => ipcRenderer.invoke('export:toWord', planId),
     toPdf: (planId) => ipcRenderer.invoke('export:toPdf', planId),
   },
+  file: {
+    save:   (planId, filePath) => ipcRenderer.invoke('file:save', planId, filePath),
+    saveAs: (planId)           => ipcRenderer.invoke('file:saveAs', planId),
+    open:   ()                 => ipcRenderer.invoke('file:open'),
+  },
 };
 
 contextBridge.exposeInMainWorld('api', api);

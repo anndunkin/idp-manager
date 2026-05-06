@@ -6,6 +6,7 @@ import type {
 } from '../types';
 import { MilestoneCell } from '../components/MilestoneTracker';
 import ExportButtons from '../components/ExportButtons';
+import FileMenuBar from '../components/FileMenuBar';
 
 interface EditItemModal {
   item: DevelopmentItemWithMilestones;
@@ -148,6 +149,7 @@ export default function IDPDetail() {
   const [editingPlanStatus, setEditingPlanStatus] = useState(false);
   const [planStatus, setPlanStatus] = useState<PlanStatus>('Active');
   const [planNotes, setPlanNotes] = useState('');
+  const [currentFilePath, setCurrentFilePath] = useState<string | undefined>();
 
   const load = useCallback(async () => {
     if (!window.api || !id) return;
@@ -166,6 +168,20 @@ export default function IDPDetail() {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Ctrl+S / Cmd+S keyboard shortcut for Save
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's' && !e.shiftKey) {
+        e.preventDefault();
+        if (plan) window.api.file.save(plan.id, currentFilePath).then(r => {
+          if (r.success && r.filePath) setCurrentFilePath(r.filePath);
+        });
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [plan, currentFilePath]);
 
   const handleMilestoneSave = async (data: {
     item_id: number; quarter: Quarter; status: MilestoneStatus; percent_complete: number; notes: string
@@ -259,7 +275,16 @@ export default function IDPDetail() {
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+            <FileMenuBar
+              planId={plan.id}
+              currentFilePath={currentFilePath}
+              onFileSaved={fp => setCurrentFilePath(fp)}
+              onFileOpened={(newPlanId, fp) => {
+                setCurrentFilePath(fp);
+                navigate(`/idp/${newPlanId}`);
+              }}
+            />
             <ExportButtons planId={plan.id} />
             <button
               onClick={() => setEditingPlanStatus(s => !s)}

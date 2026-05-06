@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import {
@@ -13,7 +13,10 @@ import type {
   PlanCreate, PlanUpdate,
   ItemCreate, ItemUpdate,
   MilestoneUpsert,
+  IdpFilePayload,
+  FileResult,
 } from './types';
+import { IDP_FILE_VERSION } from './types';
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -181,5 +184,177 @@ ipcMain.handle('export:toPdf', async (_event, planId: number) => {
     const buffer = await exportToPdfBuffer(planData);
     const name = `IDP_${planData.employee?.name ?? 'Plan'}_${planData.plan_year}`.replace(/\s+/g, '_');
     return saveExportFile(`${name}.pdf`, buffer);
+  } catch (err) { return { success: false, error: String(err) }; }
+});
+
+// ─── File Management Handlers ────────────────────────────────────────────────────────────
+
+/** Build a portable IdpFilePayload snapshot from a planId */
+function buildFilePayload(planId: number): IdpFilePayload {
+  const db = getDatabase();
+  const plan = db.prepare(
+    `SELECT * FROM development_plans WHERE id = ?`
+  ).get(planId) as { id: number; employee_id: number; plan_date: string; plan_year: number; status: string; notes: string };
+  if (!plan) throw new Error('Plan not found');
+
+  const employee = db.prepare(
+    `SELECT * FROM employees WHERE id = ?`
+  ).get(plan.employee_id) as { id: number; name: string; manager_name: string; job_title: string; department: string };
+  if (!employee) throw new Error('Employee not found');
+
+  const items = db.prepare(
+    `SELECT * FROM development_items WHERE plan_id = ? ORDER BY sort_order`
+  ).all(planId) as Array<{ id: number; plan_id: number; item_description: string; due_date: string; support_needed: string; sort_order: number }>;
+
+  const fileItems = items.map(item => {
+    const milestones = (db.prepare(
+      `SELECT quarter, status, percent_complete, notes FROM quarterly_milestones WHERE item_id = ?`
+    ).all(item.id) as Array<{ quarter: number; status: string; percent_complete: number; notes: string }>)
+      .map(m => ({ ...m, quarter: m.quarter as 1|2|3|4, status: m.status as import('./types').MilestoneStatus }));
+    return {
+      item_description: item.item_description,
+      due_date: item.due_date,
+      support_needed: item.support_needed,
+      sort_order: item.sort_order,
+      milestones,
+    };
+  });
+
+  return {
+    version: IDP_FILE_VERSION,
+    savedAt: new Date().toISOString(),
+    employee: {
+      name: employee.name,
+      manager_name: employee.manager_name,
+      job_title: employee.job_title,
+      department: employee.department,
+    },
+    plan: {
+      plan_date: plan.plan_date,
+      plan_year: plan.plan_year,
+      status: plan.status as 'Active' | 'Inactive' | 'Complete',
+      notes: plan.notes,
+    },
+    items: fileItems,
+  };
+}
+
+/** Write payload JSON to a path the user chose (or chose previously) */
+function writeIdpFile(filePath: string, payload: IdpFilePayload): FileResult {
+  fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf-8');
+  return { success: true, filePath, payload };
+}
+
+/** Import an IdpFilePayload into the DB; returns the new planId */
+function importFilePayload(payload: IdpFilePayload): number {
+  const db = getDatabase();
+
+  // Upsert employee — match by name + manager_name
+  let emp = db.prepare(
+    `SELECT id FROM employees WHERE name = ? AND manager_name = ?`
+  ).get(payload.employee.name, payload.employee.manager_name) as { id: number } | undefined;
+
+  if (!emp) {
+    const result = db.prepare(
+      `INSERT INTO employees (name, manager_name, job_title, department)
+       VALUES (?, ?, ?, ?)`
+    ).run(
+      payload.employee.name,
+      payload.employee.manager_name,
+      payload.employee.job_title ?? '',
+      payload.employee.department ?? ''
+    );
+    emp = { id: Number(result.lastInsertRowid) };
+  } else {
+    db.prepare(
+      `UPDATE employees SET job_title = ?, department = ?, updated_at = datetime('now')
+       WHERE id = ?`
+    ).run(payload.employee.job_title ?? '', payload.employee.department ?? '', emp.id);
+  }
+
+  // Always create a new plan (a file open is a new version / copy)
+  const planResult = db.prepare(
+    `INSERT INTO development_plans (employee_id, plan_date, plan_year, status, notes)
+     VALUES (?, ?, ?, ?, ?)`
+  ).run(
+    emp.id,
+    payload.plan.plan_date,
+    payload.plan.plan_year,
+    payload.plan.status,
+    payload.plan.notes ?? ''
+  );
+  const planId = Number(planResult.lastInsertRowid);
+
+  for (const item of payload.items) {
+    const itemResult = db.prepare(
+      `INSERT INTO development_items (plan_id, item_description, due_date, support_needed, sort_order)
+       VALUES (?, ?, ?, ?, ?)`
+    ).run(planId, item.item_description, item.due_date ?? '', item.support_needed ?? '', item.sort_order ?? 0);
+    const itemId = Number(itemResult.lastInsertRowid);
+
+    for (const m of item.milestones ?? []) {
+      db.prepare(
+        `INSERT OR REPLACE INTO quarterly_milestones (item_id, quarter, status, percent_complete, notes)
+         VALUES (?, ?, ?, ?, ?)`
+      ).run(itemId, m.quarter, m.status ?? 'Not Started', m.percent_complete ?? 0, m.notes ?? '');
+    }
+  }
+
+  return planId;
+}
+
+// file:save — save to known path or fall back to dialog
+ipcMain.handle('file:save', async (_event, planId: number, filePath?: string): Promise<FileResult> => {
+  try {
+    const payload = buildFilePayload(planId);
+    if (filePath && fs.existsSync(path.dirname(filePath))) {
+      return writeIdpFile(filePath, payload);
+    }
+    // No known path — show save dialog
+    const win = BrowserWindow.getAllWindows()[0];
+    const defaultName = `IDP_${payload.employee.name}_${payload.plan.plan_year}`.replace(/\s+/g, '_') + '.idp';
+    const { canceled, filePath: chosen } = await dialog.showSaveDialog(win, {
+      title: 'Save IDP File',
+      defaultPath: defaultName,
+      filters: [{ name: 'IDP Files', extensions: ['idp'] }, { name: 'All Files', extensions: ['*'] }],
+    });
+    if (canceled || !chosen) return { success: false };
+    return writeIdpFile(chosen, payload);
+  } catch (err) { return { success: false, error: String(err) }; }
+});
+
+// file:saveAs — always show dialog
+ipcMain.handle('file:saveAs', async (_event, planId: number): Promise<FileResult> => {
+  try {
+    const payload = buildFilePayload(planId);
+    const win = BrowserWindow.getAllWindows()[0];
+    const defaultName = `IDP_${payload.employee.name}_${payload.plan.plan_year}`.replace(/\s+/g, '_') + '.idp';
+    const { canceled, filePath: chosen } = await dialog.showSaveDialog(win, {
+      title: 'Save IDP File As…',
+      defaultPath: defaultName,
+      filters: [{ name: 'IDP Files', extensions: ['idp'] }, { name: 'All Files', extensions: ['*'] }],
+    });
+    if (canceled || !chosen) return { success: false };
+    return writeIdpFile(chosen, payload);
+  } catch (err) { return { success: false, error: String(err) }; }
+});
+
+// file:open — show open dialog, import payload, navigate to new plan
+ipcMain.handle('file:open', async (): Promise<FileResult & { planId?: number }> => {
+  try {
+    const win = BrowserWindow.getAllWindows()[0];
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      title: 'Open IDP File',
+      filters: [{ name: 'IDP Files', extensions: ['idp'] }, { name: 'All Files', extensions: ['*'] }],
+      properties: ['openFile'],
+    });
+    if (canceled || !filePaths.length) return { success: false };
+    const raw = fs.readFileSync(filePaths[0], 'utf-8');
+    const payload: IdpFilePayload = JSON.parse(raw);
+    if (!payload.version || !payload.employee || !payload.plan) {
+      return { success: false, error: 'Invalid or unrecognised .idp file.' };
+    }
+    const planId = importFilePayload(payload);
+    return { success: true, filePath: filePaths[0], payload, planId };
   } catch (err) { return { success: false, error: String(err) }; }
 });

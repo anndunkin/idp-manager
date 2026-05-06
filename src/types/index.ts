@@ -121,6 +121,11 @@ export interface WindowApi {
     toWord: (planId: number) => Promise<{ success: boolean; filePath?: string; error?: string }>;
     toPdf: (planId: number) => Promise<{ success: boolean; filePath?: string; error?: string }>;
   };
+  file: {
+    save: (planId: number, filePath?: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+    saveAs: (planId: number) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+    open: () => Promise<{ success: boolean; filePath?: string; error?: string; planId?: number }>;
+  };
 }
 
 // Augment Window

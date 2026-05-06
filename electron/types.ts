@@ -88,6 +88,31 @@ export interface DashboardStats {
   completionRate: number;
 }
 
+// ─── File Management ─────────────────────────────────────────────────────────
+
+/** Schema version so we can migrate old .idp files in the future */
+export const IDP_FILE_VERSION = 1;
+
+/** The full snapshot written to / read from a .idp file */
+export interface IdpFilePayload {
+  version: number;
+  savedAt: string;         // ISO timestamp
+  employee: Omit<Employee, 'id' | 'created_at' | 'updated_at'>;
+  plan: Omit<DevelopmentPlan, 'id' | 'employee_id' | 'created_at' | 'updated_at'>;
+  items: Array<
+    Omit<DevelopmentItem, 'id' | 'plan_id' | 'created_at' | 'updated_at'> & {
+      milestones: Array<Omit<QuarterlyMilestone, 'id' | 'item_id' | 'updated_at'>>;
+    }
+  >;
+}
+
+export interface FileResult {
+  success: boolean;
+  filePath?: string;   // path actually written / opened
+  payload?: IdpFilePayload;
+  error?: string;
+}
+
 // ─── IPC API types ────────────────────────────────────────────────────────────
 
 export interface WindowApi {
@@ -120,6 +145,14 @@ export interface WindowApi {
     toExcel: (planId: number) => Promise<{ success: boolean; filePath?: string; error?: string }>;
     toWord: (planId: number) => Promise<{ success: boolean; filePath?: string; error?: string }>;
     toPdf: (planId: number) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+  };
+  file: {
+    /** Save to a previously known path; falls back to Save As if no path given */
+    save: (planId: number, filePath?: string) => Promise<FileResult>;
+    /** Always show the save dialog */
+    saveAs: (planId: number) => Promise<FileResult>;
+    /** Show open dialog, read file, import into DB, return the resulting plan id */
+    open: () => Promise<FileResult & { planId?: number }>;
   };
 }
 
