@@ -1,16 +1,22 @@
 ; installer.nsh — Custom NSIS macros for IDP Manager
-; Sets the default installation directory to the folder containing the installer EXE.
+;
+; customInit runs AFTER initMultiUser sets $INSTDIR, so it correctly overrides it.
+; preInit runs BEFORE initMultiUser and gets overwritten — do not use preInit for path.
 
 !macro preInit
-  ; Get the directory of the installer EXE itself
-  ; $EXEDIR is the directory from which the installer was launched
+  ; intentionally empty — path override happens in customInit
+!macroend
+
+!macro customInit
+  ; Override $INSTDIR to be a subfolder of wherever the installer EXE lives.
+  ; $EXEDIR = the directory containing the installer EXE at runtime.
   StrCpy $INSTDIR "$EXEDIR\IDP Manager"
 !macroend
 
 !macro customInstall
-  ; Nothing additional needed
+  ; intentionally empty
 !macroend
 
 !macro customUnInstall
-  ; Nothing additional needed
+  ; intentionally empty
 !macroend
