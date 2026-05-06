@@ -2,6 +2,9 @@
 
 A desktop application for creating and tracking **Individual Development Plans** for cybersecurity and technical teams.
 
+[![Latest Release](https://img.shields.io/github/v/release/anndunkin/idp-manager?label=Download&logo=windows&style=for-the-badge)](https://github.com/anndunkin/idp-manager/releases/latest)
+[![Tests](https://img.shields.io/badge/tests-144%20passing-brightgreen?style=for-the-badge)](https://github.com/anndunkin/idp-manager/actions)
+
 **Version:** 1.0.8 | **Platform:** Windows 10/11 x64 | **Stack:** Electron · React · TypeScript · SQLite
 
 ---
@@ -24,12 +27,12 @@ A desktop application for creating and tracking **Individual Development Plans**
 
 ## Installation
 
-Download one of the release deliverables:
+Download the latest release from the **[Releases page](https://github.com/anndunkin/idp-manager/releases/latest)**:
 
 | File | Description |
 |---|---|
-| `IDP Manager-1.0.8-win.zip` | Extract and run `IDP Manager.exe` directly |
-| `IDP Manager Setup 1.0.8.exe` | Installer — runs through a setup wizard |
+| `IDP Manager-*.win.zip` | Extract and run `IDP Manager.exe` directly (recommended) |
+| `IDP Manager Setup *.exe` | Installer — runs through a setup wizard |
 
 > **First launch:** Windows SmartScreen may show a warning. Click **More info → Run anyway**. This is expected for a self-signed certificate.
 
@@ -91,6 +94,7 @@ npm run build       # Production build
 ## Repository
 
 - **GitHub:** https://github.com/anndunkin/idp-manager (private)
+- **Releases:** https://github.com/anndunkin/idp-manager/releases
 - **Related apps:** [timetrack-app](https://github.com/anndunkin/timetrack-app) · [dga-invoice-generator](https://github.com/anndunkin/dga-invoice-generator) · [expense-tracker](https://github.com/anndunkin/expense-tracker)
 
 ---

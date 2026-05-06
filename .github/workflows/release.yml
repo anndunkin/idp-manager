@@ -1,0 +1,95 @@
+name: Build & Release
+
+# Triggers on any tag matching v* (e.g. v1.0.8, v1.2.0)
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # needed to create releases and upload assets
+
+jobs:
+  build-and-release:
+    name: Build Windows x64 and publish release
+    runs-on: windows-latest   # must be Windows to build the NSIS installer natively
+
+    steps:
+      # ── 1. Checkout full history so the tag commit is available ──────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. Set up Node.js ────────────────────────────────────────────────────
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── 3. Install dependencies (no native rebuild — we use prebuilt binary) ─
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # ── 4. Run full test suite ───────────────────────────────────────────────
+      - name: Run tests
+        run: npx vitest run
+
+      # ── 5. Vite + tsc production build ───────────────────────────────────────
+      - name: Build (Vite + tsc)
+        run: npm run build
+
+      # ── 6. Package with electron-builder (zip + nsis) ────────────────────────
+      - name: Package Windows installers
+        run: npx electron-builder --win --x64 --config electron-builder.config.js
+        env:
+          # Disable code signing in CI — artifacts are signed separately
+          # or downstream consumers can sign with their own cert.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      # ── 7. Extract version from tag (strips leading 'v') ─────────────────────
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # ── 8. Locate build artifacts ─────────────────────────────────────────────
+      - name: Locate artifacts
+        id: artifacts
+        shell: bash
+        run: |
+          ZIP=$(ls dist-installer/IDP\ Manager-*.zip | head -1)
+          EXE=$(ls "dist-installer/IDP Manager Setup"*.exe | head -1)
+          echo "ZIP=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "EXE=$EXE" >> "$GITHUB_OUTPUT"
+          echo "Found ZIP: $ZIP"
+          echo "Found EXE: $EXE"
+
+      # ── 9. Extract release notes for this version from CHANGELOG.md ──────────
+      - name: Extract release notes
+        id: release_notes
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # Extract the block between ## [VERSION] and the next ## [
+          NOTES=$(awk "/^## \[$VERSION\]/{found=1; next} found && /^## \[/{exit} found{print}" CHANGELOG.md)
+          # Write to file to safely pass multiline content
+          echo "$NOTES" > release_notes.txt
+          echo "Release notes extracted for v$VERSION"
+          cat release_notes.txt
+
+      # ── 10. Create GitHub Release and upload assets ───────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Paul Selby's IDP Tool v${{ steps.version.outputs.VERSION }}"
+          tag_name: ${{ github.ref_name }}
+          body_path: release_notes.txt
+          draft: false
+          prerelease: false
+          files: |
+            ${{ steps.artifacts.outputs.ZIP }}
+            ${{ steps.artifacts.outputs.EXE }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
