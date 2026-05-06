@@ -6,3 +6,5 @@ electron/dist/
 .env
 *.db
 .DS_Store
+dist-installer/
+dist/

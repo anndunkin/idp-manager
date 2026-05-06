@@ -277,8 +277,10 @@ export async function exportToWordBuffer(plan: PlanWithItems): Promise<Buffer> {
 // ─── PDF Export ───────────────────────────────────────────────────────────────
 
 export async function exportToPdfBuffer(plan: PlanWithItems): Promise<Buffer> {
-  // Use jspdf + jspdf-autotable
-  const { jsPDF } = await import('jspdf');
+  // Use jspdf + jspdf-autotable via require (CommonJS Electron main process)
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const jspdfMod = require('jspdf') as { jsPDF?: typeof import('jspdf').jsPDF; default?: { jsPDF?: typeof import('jspdf').jsPDF } };
+  const jsPDF = (jspdfMod.jsPDF ?? jspdfMod.default?.jsPDF) as typeof import('jspdf').jsPDF;
   // jspdf-autotable v5: autoTable is a named export function(doc, options)
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const atModule = require('jspdf-autotable') as { autoTable?: (doc: unknown, options: unknown) => void; default?: (doc: unknown, options: unknown) => void } & ((doc: unknown, options: unknown) => void);
