@@ -12,9 +12,11 @@ module.exports = {
     "prebuilt-win32-x64/**/*"
   ],
   asar: true,
-  // Unpack native .node binaries so afterPack can inject the Win32 prebuilt
+  // Unpack native .node files AND the preload script from asar
+  // (sandbox:false means preload can run from inside asar, but unpacking is safer)
   asarUnpack: [
-    "node_modules/better-sqlite3/build/Release/*.node"
+    "node_modules/better-sqlite3/build/Release/*.node",
+    "electron/dist/preload.js"
   ],
   // Skip npm/electron rebuild — prebuilt Win32 binary injected via afterPack
   npmRebuild: false,
@@ -30,10 +32,15 @@ module.exports = {
     oneClick: true,
     perMachine: false,
     allowElevation: true,
+    // Install to the same directory the installer EXE is run from
+    // $INSTDIR is set to installer location via customization below
+    installerSidebar: null,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
     shortcutName: "IDP Manager",
-    deleteAppDataOnUninstall: false
+    deleteAppDataOnUninstall: false,
+    // Custom NSIS script to install to the folder containing the installer
+    include: "scripts/installer.nsh"
   },
   mac: {
     target: "dmg",

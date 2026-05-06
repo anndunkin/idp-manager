@@ -6,7 +6,7 @@ import type {
   DevelopmentItem, ItemCreate, ItemUpdate,
   QuarterlyMilestone, MilestoneUpsert,
   DevelopmentItemWithMilestones,
-} from '../src/types/index';
+} from './types';
 
 let db: Database.Database;
 

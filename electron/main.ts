@@ -13,9 +13,24 @@ import type {
   PlanCreate, PlanUpdate,
   ItemCreate, ItemUpdate,
   MilestoneUpsert,
-} from '../src/types/index';
+} from './types';
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+
+// In production the compiled main.js is at:
+//   <asar>/electron/dist/main.js   (package.json main field)
+// The renderer index.html is at:
+//   <asar>/dist/index.html
+// __dirname inside the asar = /electron/dist  → ../../dist/index.html = /dist/index.html ✓
+// But we use app.getAppPath() to be explicit and asar-safe.
+const RENDERER_PATH = isDev
+  ? 'http://localhost:5173'
+  : path.join(app.getAppPath(), 'dist', 'index.html');
+
+// Preload must be an absolute filesystem path (not inside asar when sandbox:true).
+// electron/dist/preload.js is extracted to app.asar.unpacked by the asarUnpack rule,
+// OR we reference it via __dirname which Electron resolves correctly for preloads.
+const PRELOAD_PATH = path.join(__dirname, 'preload.js');
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -24,13 +39,16 @@ function createWindow(): void {
     minWidth: 900,
     minHeight: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: PRELOAD_PATH,
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: true,
+      // sandbox: true requires preload to be outside asar — disabled for compatibility
+      // contextIsolation: true already provides the security boundary
+      sandbox: false,
       webSecurity: true,
     },
-    titleBarStyle: 'hiddenInset',
+    // hiddenInset is macOS only — use default on Windows/Linux
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     backgroundColor: '#f8fafc',
     show: false,
   });
@@ -38,10 +56,15 @@ function createWindow(): void {
   win.once('ready-to-show', () => win.show());
 
   if (isDev) {
-    win.loadURL('http://localhost:5173');
+    win.loadURL(RENDERER_PATH);
     win.webContents.openDevTools();
   } else {
-    win.loadFile(path.join(__dirname, '../../dist/index.html'));
+    win.loadFile(RENDERER_PATH)
+      .catch(err => {
+        // Log to a file so we can diagnose launch failures
+        const logPath = path.join(app.getPath('userData'), 'launch-error.log');
+        fs.appendFileSync(logPath, `[${new Date().toISOString()}] loadFile error: ${err}\npath: ${RENDERER_PATH}\n`);
+      });
   }
 
   // Content Security Policy
@@ -53,7 +76,7 @@ function createWindow(): void {
           "default-src 'self'; " +
           "script-src 'self' 'unsafe-inline'; " +
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-          "font-src 'self' https://fonts.gstatic.com; " +
+          "font-src 'self' https://fonts.gstatic.com data:; " +
           "img-src 'self' data:; " +
           "connect-src 'self'",
         ],
@@ -63,22 +86,38 @@ function createWindow(): void {
 
   // Block navigation to external URLs
   win.webContents.on('will-navigate', (event, url) => {
-    const parsedUrl = new URL(url);
-    if (isDev && parsedUrl.origin === 'http://localhost:5173') return;
+    try {
+      const parsedUrl = new URL(url);
+      if (isDev && parsedUrl.origin === 'http://localhost:5173') return;
+      if (parsedUrl.protocol === 'file:') return;
+    } catch { /* ignore */ }
     event.preventDefault();
     shell.openExternal(url);
+  });
+
+  // Log any renderer crashes to userData for diagnostics
+  win.webContents.on('render-process-gone', (_e, details) => {
+    const logPath = path.join(app.getPath('userData'), 'launch-error.log');
+    fs.appendFileSync(logPath, `[${new Date().toISOString()}] render-process-gone: ${JSON.stringify(details)}\n`);
+  });
+
+  win.webContents.on('did-fail-load', (_e, errorCode, errorDescription, validatedURL) => {
+    const logPath = path.join(app.getPath('userData'), 'launch-error.log');
+    fs.appendFileSync(logPath, `[${new Date().toISOString()}] did-fail-load: ${errorCode} ${errorDescription} url=${validatedURL}\n`);
   });
 }
 
 app.whenReady().then(() => {
   // Initialize DB
   getDatabase();
-
   createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+}).catch(err => {
+  const logPath = path.join(app.getPath('userData'), 'launch-error.log');
+  try { fs.appendFileSync(logPath, `[${new Date().toISOString()}] app.whenReady error: ${err}\n`); } catch { /* ignore */ }
 });
 
 app.on('window-all-closed', () => {
@@ -184,8 +223,6 @@ ipcMain.handle('export:toExcel', async (event, planId: number) => {
     const win = BrowserWindow.fromWebContents(event.sender)!;
     const planData = planGetById(getDatabase(), planId);
     if (!planData) throw new Error('Plan not found');
-
-    // Dynamically require to avoid bundling issues in renderer
     const { exportToExcelBuffer } = await import('./exportMain');
     const buffer = await exportToExcelBuffer(planData);
     const employee = planData.employee;
@@ -201,7 +238,6 @@ ipcMain.handle('export:toWord', async (event, planId: number) => {
     const win = BrowserWindow.fromWebContents(event.sender)!;
     const planData = planGetById(getDatabase(), planId);
     if (!planData) throw new Error('Plan not found');
-
     const { exportToWordBuffer } = await import('./exportMain');
     const buffer = await exportToWordBuffer(planData);
     const employee = planData.employee;
@@ -217,7 +253,6 @@ ipcMain.handle('export:toPdf', async (event, planId: number) => {
     const win = BrowserWindow.fromWebContents(event.sender)!;
     const planData = planGetById(getDatabase(), planId);
     if (!planData) throw new Error('Plan not found');
-
     const { exportToPdfBuffer } = await import('./exportMain');
     const buffer = await exportToPdfBuffer(planData);
     const employee = planData.employee;

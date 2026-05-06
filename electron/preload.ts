@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { WindowApi } from '../src/types/index';
+import type { WindowApi } from './types';
 
 const api: WindowApi = {
   employees: {

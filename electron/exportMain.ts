@@ -4,7 +4,7 @@ import {
   TextRun, HeadingLevel, AlignmentType, WidthType,
   BorderStyle, ShadingType, Packer,
 } from 'docx';
-import type { PlanWithItems, QuarterlyMilestone } from '../src/types/index';
+import type { PlanWithItems, QuarterlyMilestone } from './types';
 
 const TEAL = '0D9488';
 const TEAL_LIGHT = 'CCFBF1';
