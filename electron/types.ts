@@ -109,6 +109,13 @@ export interface IdpFilePayload {
   >;
 }
 
+export interface ExcelImportFileResult {
+  success: boolean;
+  filePath?: string;
+  planId?: number;
+  error?: string;
+}
+
 export interface FileResult {
   success: boolean;
   filePath?: string;   // path actually written / opened
@@ -156,6 +163,12 @@ export interface WindowApi {
     saveAs: (planId: number) => Promise<FileResult>;
     /** Show open dialog, read file, import into DB, return the resulting plan id */
     open: () => Promise<FileResult & { planId?: number }>;
+  };
+  import: {
+    /** Show open dialog for .xlsx Employee Input Form; parse and import into DB */
+    fromExcel: () => Promise<ExcelImportFileResult>;
+    /** Get the template .xlsx as a Buffer and save to Downloads (manager distributes to employees) */
+    downloadTemplate: () => Promise<{ success: boolean; filePath?: string; error?: string }>;
   };
 }
 

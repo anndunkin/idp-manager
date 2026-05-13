@@ -15,8 +15,10 @@ import type {
   MilestoneUpsert,
   IdpFilePayload,
   FileResult,
+  ExcelImportFileResult,
 } from './types';
 import { IDP_FILE_VERSION } from './types';
+import { parseEmployeeFormExcel } from './importExcel';
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -339,6 +341,46 @@ ipcMain.handle('file:saveAs', async (_event, planId: number): Promise<FileResult
     });
     if (canceled || !chosen) return { success: false };
     return writeIdpFile(chosen, payload);
+  } catch (err) { return { success: false, error: String(err) }; }
+});
+
+// import:fromExcel — show open dialog for .xlsx employee form; parse and import
+ipcMain.handle('import:fromExcel', async (): Promise<ExcelImportFileResult> => {
+  try {
+    const win = BrowserWindow.getAllWindows()[0];
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      title: 'Import Employee Input Form',
+      filters: [
+        { name: 'Excel Workbooks', extensions: ['xlsx'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+      properties: ['openFile'],
+    });
+    if (canceled || !filePaths.length) return { success: false };
+
+    const result = await parseEmployeeFormExcel(filePaths[0]);
+    if (!result.success || !result.payload) {
+      return { success: false, filePath: filePaths[0], error: result.error };
+    }
+
+    const planId = importFilePayload(result.payload);
+    return { success: true, filePath: filePaths[0], planId };
+  } catch (err) { return { success: false, error: String(err) }; }
+});
+
+// import:downloadTemplate — generate and save the blank form to Downloads
+ipcMain.handle('import:downloadTemplate', async (): Promise<{ success: boolean; filePath?: string; error?: string }> => {
+  try {
+    // Dynamically require the generator script (CJS, not bundled by Vite)
+    // In production the script lives in resources/app.asar/scripts/
+    const scriptPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'app.asar', 'scripts', 'generateFormTemplate.js')
+      : path.join(__dirname, '..', '..', 'scripts', 'generateFormTemplate.js');
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { generateBuffer } = require(scriptPath) as { generateBuffer: () => Promise<Buffer> };
+    const buffer = await generateBuffer();
+    return saveExportFile('IDP_Employee_Input_Form.xlsx', buffer);
   } catch (err) { return { success: false, error: String(err) }; }
 });
 

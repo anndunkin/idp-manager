@@ -28,6 +28,20 @@ const FolderOpenIcon = () => (
   </svg>
 );
 
+const TableIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M3 10h18M3 14h18M10 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z" />
+  </svg>
+);
+
+const DownloadIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+  </svg>
+);
+
 const navItems: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: <ChartIcon /> },
   { to: '/employees', label: 'Employees', icon: <UsersIcon /> },
@@ -37,6 +51,11 @@ export default function NavBar() {
   const navigate = useNavigate();
   const [opening, setOpening] = useState(false);
   const [openError, setOpenError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadMsg, setDownloadMsg] = useState<string | null>(null);
 
   const handleOpenFile = async () => {
     setOpening(true);
@@ -54,6 +73,47 @@ export default function NavBar() {
       setTimeout(() => setOpenError(null), 4000);
     } finally {
       setOpening(false);
+    }
+  };
+
+  const handleImportExcel = async () => {
+    setImporting(true);
+    setImportError(null);
+    setImportSuccess(null);
+    try {
+      const result = await window.api.import.fromExcel();
+      if (result.success && result.planId != null) {
+        setImportSuccess('Form imported successfully.');
+        setTimeout(() => setImportSuccess(null), 3000);
+        navigate(`/idp/${result.planId}`);
+      } else if (result.error) {
+        setImportError(result.error);
+        setTimeout(() => setImportError(null), 6000);
+      }
+    } catch (err) {
+      setImportError(String(err));
+      setTimeout(() => setImportError(null), 6000);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    setDownloading(true);
+    setDownloadMsg(null);
+    try {
+      const result = await window.api.import.downloadTemplate();
+      if (result.success) {
+        setDownloadMsg('Template saved to Downloads.');
+      } else {
+        setDownloadMsg(result.error ?? 'Download failed.');
+      }
+      setTimeout(() => setDownloadMsg(null), 4000);
+    } catch (err) {
+      setDownloadMsg(String(err));
+      setTimeout(() => setDownloadMsg(null), 4000);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -95,8 +155,9 @@ export default function NavBar() {
         ))}
       </div>
 
-      {/* Open File */}
-      <div className="px-3 pb-3">
+      {/* File Actions */}
+      <div className="px-3 pb-2 space-y-1">
+        {/* Open .idp File */}
         <button
           onClick={handleOpenFile}
           disabled={opening}
@@ -115,11 +176,56 @@ export default function NavBar() {
         {openError && (
           <p className="text-red-300 text-xs mt-1 px-3">{openError}</p>
         )}
+
+        {/* Import Employee Excel Form */}
+        <button
+          onClick={handleImportExcel}
+          disabled={importing}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 text-primary-200 hover:bg-primary-800 hover:text-white disabled:opacity-50"
+          title="Import a completed Employee Input Form (.xlsx)"
+        >
+          {importing ? (
+            <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <TableIcon />
+          )}
+          Import Employee Form
+        </button>
+        {importError && (
+          <p className="text-red-300 text-xs mt-1 px-3">{importError}</p>
+        )}
+        {importSuccess && (
+          <p className="text-green-300 text-xs mt-1 px-3">{importSuccess}</p>
+        )}
+
+        {/* Download blank template */}
+        <button
+          onClick={handleDownloadTemplate}
+          disabled={downloading}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150 text-primary-400 hover:bg-primary-800 hover:text-primary-200 disabled:opacity-50"
+          title="Download blank Employee Input Form template"
+        >
+          {downloading ? (
+            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <DownloadIcon />
+          )}
+          Get Form Template
+        </button>
+        {downloadMsg && (
+          <p className="text-primary-300 text-xs mt-1 px-3">{downloadMsg}</p>
+        )}
       </div>
 
       {/* Footer */}
       <div className="px-5 py-4 border-t border-primary-700">
-        <p className="text-primary-400 text-xs">v1.0.7</p>
+        <p className="text-primary-400 text-xs">v1.1.0</p>
       </div>
     </nav>
   );

@@ -540,7 +540,7 @@ npx vitest                  # Watch mode
 
 ## Security Architecture
 
-### Electron Security Settings
+### Electron Security Settings (unchanged)
 
 | Setting | Value | Reason |
 |---|---|---|
@@ -551,7 +551,15 @@ npx vitest                  # Watch mode
 
 ### Input Validation
 
-All CRUD operations validate required fields and reject empty strings (after trim). The database enforces additional constraints:
+All CRUD operations validate required fields and reject empty strings (after trim). The Excel import parser (v1.1.0) adds an additional validation layer before any data reaches the database:
+
+- Required fields (`employee_name`, `manager_name`, `plan_date`) are checked before DB write
+- `plan_year` is range-checked (2000–2100)
+- `status` is normalized to a whitelist value (defaults to `Active`)
+- `milestone_count` is normalized to one of {2, 3, 4, 6, 12} (defaults to `4`)
+- Items with empty descriptions are silently skipped; an error is returned if no valid items remain
+
+The database enforces additional constraints:
 
 - `status` fields use `CHECK` constraints with whitelists
 - `percent_complete` is constrained to `0–100`

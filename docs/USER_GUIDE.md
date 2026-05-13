@@ -1,6 +1,6 @@
 # Paul Selby's IDP Tool — User Guide
 
-**Version:** 1.0.8  
+**Version:** 1.1.0  
 **Platform:** Windows 10/11 (x64)
 
 ---
@@ -16,12 +16,13 @@
 7. [Working with Development Items](#working-with-development-items)
 8. [Tracking Milestone Progress](#tracking-milestone-progress)
 9. [File Management — Save, Save As, Open](#file-management--save-save-as-open)
-10. [Exporting Reports](#exporting-reports)
-11. [Editing and Updating Plans](#editing-and-updating-plans)
-12. [Deleting Records](#deleting-records)
-13. [Dashboard Overview](#dashboard-overview)
-14. [Keyboard Shortcuts](#keyboard-shortcuts)
-15. [Troubleshooting](#troubleshooting)
+10. [Employee Input Form (Excel)](#employee-input-form-excel)
+11. [Exporting Reports](#exporting-reports)
+12. [Editing and Updating Plans](#editing-and-updating-plans)
+13. [Deleting Records](#deleting-records)
+14. [Dashboard Overview](#dashboard-overview)
+15. [Keyboard Shortcuts](#keyboard-shortcuts)
+16. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -198,6 +199,64 @@ The plan is imported — if the employee already exists in the database (matched
 ### File Format
 
 `.idp` files are JSON text files. They capture the complete state of the plan: employee details, plan metadata, all development items, and all milestone data. The `milestone_count` value is preserved, so a 12-period monthly plan imported on another machine will still show 12 columns.
+
+---
+
+## Employee Input Form (Excel)
+
+The **Employee Input Form** is a branded Excel workbook (`.xlsx`) that managers distribute to employees. The employee fills it out and returns it; the manager then imports it directly into the IDP Tool with a single click — no manual data entry required.
+
+### Getting the Blank Template
+
+To get the template to send to an employee:
+
+1. Click **Get Form Template** in the left sidebar (below *Import Employee Form*)
+2. The file `IDP_Employee_Input_Form.xlsx` is saved to your **Downloads** folder and opens automatically
+3. Send it to your employee via email, Teams, or SharePoint
+
+### What the Employee Fills Out
+
+The form has three sections:
+
+| Section | Fields |
+|---|---|
+| **1 — Employee Information** | Full Name \*, Manager Name \*, Job Title, Department |
+| **2 — Development Plan Details** | Plan Date \*, Plan Year \*, Status (dropdown), Milestone Periods (dropdown), Plan Notes |
+| **3 — Development Items** | Up to 5 rows: Description \*, Due Date, Support Needed |
+
+> Fields marked \* are required. The employee only needs to fill in the item rows they are using — blank rows are skipped on import.
+
+The **Status** and **Milestone Periods** fields have dropdown lists built into the spreadsheet:
+
+| Status options | Milestone Period options |
+|---|---|
+| Active, Inactive, Complete | 2 — Semi-Annual, 3 — Thirds, 4 — Quarterly, 6 — Bi-Monthly, 12 — Monthly |
+
+### Importing the Completed Form
+
+When the employee returns the filled-out form:
+
+1. Click **Import Employee Form** in the left sidebar
+2. Browse to the returned `.xlsx` file and click **Open**
+3. The IDP Tool reads the form, creates or matches the employee record, and creates a new development plan
+4. You are taken directly to the new plan's detail view to review, adjust milestone tracking, and save
+
+> **If the employee already exists** in the database (matched by full name + manager name), the new plan is linked to their existing record. No duplicate employee is created.
+
+### Validation
+
+The importer validates the form before creating any records. If a required field is missing or invalid, you will see an error message in the sidebar (in red) explaining exactly what needs to be corrected. Common errors:
+
+| Error | Fix |
+|---|---|
+| "Employee Full Name is required" | Employee left cell B5 blank |
+| "Manager Name is required" | Employee left cell F5 blank |
+| "Plan Date is required" | Cell B9 is blank or not in YYYY-MM-DD format |
+| "At least one development item..." | All description cells (B14–B18) are blank |
+
+### Editing After Import
+
+The imported plan is a full, editable IDP — you can add milestone tracking, reorder items, change the plan status, or add notes before saving it as a `.idp` file.
 
 ---
 

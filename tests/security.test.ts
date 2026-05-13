@@ -1,7 +1,8 @@
 /**
- * Security tests for IDP Manager v1.0.8
+ * Security tests for IDP Manager v1.1.0
  * Covers: SQL injection resistance, XSS/input sanitization, path traversal,
- * cascade delete integrity, IPC input validation, and CSP/Content-Security-Policy.
+ * cascade delete integrity, IPC input validation, CSP/Content-Security-Policy,
+ * and Excel import security (injection via form fields, malformed files, oversized input).
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
@@ -12,8 +13,11 @@ import {
   itemCreate, itemGetByPlan, itemDelete,
   milestoneUpsert, milestoneGetByItem,
 } from '../electron/database';
+import { parseEmployeeFormExcel } from '../electron/importExcel';
+import ExcelJS from 'exceljs';
 import path, { resolve } from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'fs';
+import os from 'os';
 
 // Project root is one level up from /tests
 const ROOT = resolve(__dirname, '..');
@@ -442,5 +446,158 @@ describe('Boundary and oversized input handling', () => {
     expect(() =>
       db.prepare(`INSERT INTO quarterly_milestones (item_id, quarter, status, percent_complete, notes) VALUES (?, 53, 'Not Started', 0, '')`).run(item.id)
     ).toThrow();
+  });
+});
+
+// ─── Excel Import Security ─────────────────────────────────────────────────────
+
+/** Helper: build a minimal valid Excel workbook with overridable field values */
+async function buildSecurityTestWorkbook(overrides: Record<string, ExcelJS.CellValue>): Promise<string> {
+  const CELL_MAP: Record<string, string> = {
+    employee_name: 'B5', manager_name: 'F5',
+    job_title: 'B6', department: 'F6',
+    plan_date: 'B9', plan_year: 'D9',
+    status: 'F9', milestone_count: 'B10', plan_notes: 'D10',
+    item1_description: 'B14', item1_due_date: 'C14', item1_support_needed: 'D14',
+    item2_description: 'B15', item2_due_date: 'C15', item2_support_needed: 'D15',
+    item3_description: 'B16', item3_due_date: 'C16', item3_support_needed: 'D16',
+    item4_description: 'B17', item4_due_date: 'C17', item4_support_needed: 'D17',
+    item5_description: 'B18', item5_due_date: 'C18', item5_support_needed: 'D18',
+  };
+  const defaults: Record<string, ExcelJS.CellValue> = {
+    employee_name: 'Test User', manager_name: 'Test Manager',
+    plan_date: '2026-01-01', plan_year: 2026, status: 'Active',
+    milestone_count: '4 — Quarterly (Q1–Q4)',
+    item1_description: 'Test item',
+  };
+  const values = { ...defaults, ...overrides };
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('IDP Input Form');
+  for (const [name, addr] of Object.entries(CELL_MAP)) {
+    if (values[name] !== undefined) ws.getCell(addr).value = values[name];
+  }
+  const tmpPath = path.join(os.tmpdir(), `sec_test_${Date.now()}_${Math.random().toString(36).slice(2)}.xlsx`);
+  await wb.xlsx.writeFile(tmpPath);
+  return tmpPath;
+}
+
+describe('Excel import security', () => {
+  it('SQL injection in employee name is stored as plain text (no execution)', async () => {
+    const injection = `Robert'); DROP TABLE employees; --`;
+    const file = await buildSecurityTestWorkbook({ employee_name: injection });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    // The parser returns the payload — it does NOT execute SQL
+    expect(result.success).toBe(true);
+    expect(result.payload!.employee.name).toBe(injection);
+    // Confirm the injected string is passed through unchanged (DB layer handles parameterization)
+  });
+
+  it('SQL injection in item description is stored as plain text', async () => {
+    const injection = `'; INSERT INTO employees (name, manager_name) VALUES ('hacked','hacked'); --`;
+    const file = await buildSecurityTestWorkbook({ item1_description: injection });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    expect(result.success).toBe(true);
+    expect(result.payload!.items[0].item_description).toBe(injection);
+  });
+
+  it('XSS payload in employee name is stored as plain text (not rendered as HTML)', async () => {
+    const xss = '<script>alert("xss")</script>';
+    const file = await buildSecurityTestWorkbook({ employee_name: xss });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    expect(result.success).toBe(true);
+    // The parser returns raw text; React will auto-escape on render
+    expect(result.payload!.employee.name).toBe(xss);
+  });
+
+  it('XSS payload in plan notes is preserved as plain text', async () => {
+    const xss = '<img src=x onerror=alert(1)>';
+    const file = await buildSecurityTestWorkbook({ plan_notes: xss });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    expect(result.success).toBe(true);
+    expect(result.payload!.plan.notes).toBe(xss);
+  });
+
+  it('oversized field (50 000 chars) does not crash the parser', async () => {
+    const bigStr = 'A'.repeat(50_000);
+    const file = await buildSecurityTestWorkbook({ item1_description: bigStr });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    // Should succeed — DB text columns are unlimited in SQLite
+    expect(result.success).toBe(true);
+    expect(result.payload!.items[0].item_description).toBe(bigStr);
+  });
+
+  it('null byte in employee name does not crash the parser', async () => {
+    const nullName = 'Alice\x00Bob';
+    const file = await buildSecurityTestWorkbook({ employee_name: nullName });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    expect(result.success).toBe(true);
+    // Parser should return the string (sanitization is DB layer's responsibility)
+    expect(typeof result.payload!.employee.name).toBe('string');
+  });
+
+  it('file with no worksheets returns a graceful error', async () => {
+    // Write a valid but empty xlsx
+    const wb = new ExcelJS.Workbook();
+    const tmpPath = path.join(os.tmpdir(), `empty_wb_${Date.now()}.xlsx`);
+    await wb.xlsx.writeFile(tmpPath);
+    const result = await parseEmployeeFormExcel(tmpPath);
+    unlinkSync(tmpPath);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it('non-xlsx file (text disguised as xlsx) returns a graceful error', async () => {
+    const tmpPath = path.join(os.tmpdir(), `fake_${Date.now()}.xlsx`);
+    writeFileSync(tmpPath, 'this is not an excel file at all !!!');
+    const result = await parseEmployeeFormExcel(tmpPath);
+    unlinkSync(tmpPath);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/Failed to read/i);
+  });
+
+  it('path traversal attempt in filePath is rejected by the OS (no crash)', async () => {
+    const result = await parseEmployeeFormExcel('../../etc/passwd');
+    expect(result.success).toBe(false);
+  });
+
+  it('invalid status value falls back to Active (no DB constraint violation)', async () => {
+    const file = await buildSecurityTestWorkbook({ status: 'MALICIOUS_STATUS' });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    expect(result.success).toBe(true);
+    expect(result.payload!.plan.status).toBe('Active');
+  });
+
+  it('invalid milestone_count falls back to 4 (no DB constraint violation)', async () => {
+    const file = await buildSecurityTestWorkbook({ milestone_count: 'INVALID_COUNT' });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    expect(result.success).toBe(true);
+    expect(result.payload!.plan.milestone_count).toBe(4);
+  });
+
+  it('plan_year out of range (e.g. 1800) returns validation error', async () => {
+    const file = await buildSecurityTestWorkbook({ plan_year: 1800 });
+    const result = await parseEmployeeFormExcel(file);
+    unlinkSync(file);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/year/i);
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "idp-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Individual Development Plan Manager for Healthcare",
   "main": "electron/dist/main.js",
   "scripts": {

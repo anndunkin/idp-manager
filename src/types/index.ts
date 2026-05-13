@@ -129,6 +129,10 @@ export interface WindowApi {
     saveAs: (planId: number) => Promise<{ success: boolean; filePath?: string; error?: string }>;
     open: () => Promise<{ success: boolean; filePath?: string; error?: string; planId?: number }>;
   };
+  import: {
+    fromExcel: () => Promise<{ success: boolean; filePath?: string; planId?: number; error?: string }>;
+    downloadTemplate: () => Promise<{ success: boolean; filePath?: string; error?: string }>;
+  };
 }
 
 // Augment Window

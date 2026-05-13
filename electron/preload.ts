@@ -37,6 +37,10 @@ const api: WindowApi = {
     saveAs: (planId)           => ipcRenderer.invoke('file:saveAs', planId),
     open:   ()                 => ipcRenderer.invoke('file:open'),
   },
+  import: {
+    fromExcel:        () => ipcRenderer.invoke('import:fromExcel'),
+    downloadTemplate: () => ipcRenderer.invoke('import:downloadTemplate'),
+  },
 };
 
 contextBridge.exposeInMainWorld('api', api);
