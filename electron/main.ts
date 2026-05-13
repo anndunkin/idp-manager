@@ -207,7 +207,7 @@ function buildFilePayload(planId: number): IdpFilePayload {
 
   const items = db.prepare(
     `SELECT * FROM development_items WHERE plan_id = ? ORDER BY sort_order`
-  ).all(planId) as Array<{ id: number; plan_id: number; item_description: string; due_date: string; support_needed: string; sort_order: number }>;
+  ).all(planId) as Array<{ id: number; plan_id: number; item_description: string; due_date: string; support_needed: string; cost_estimate: string; sort_order: number }>;
 
   const fileItems = items.map(item => {
     const milestones = (db.prepare(
@@ -218,6 +218,7 @@ function buildFilePayload(planId: number): IdpFilePayload {
       item_description: item.item_description,
       due_date: item.due_date,
       support_needed: item.support_needed,
+      cost_estimate: item.cost_estimate ?? '',
       sort_order: item.sort_order,
       milestones,
     };
@@ -292,9 +293,9 @@ function importFilePayload(payload: IdpFilePayload): number {
 
   for (const item of payload.items) {
     const itemResult = db.prepare(
-      `INSERT INTO development_items (plan_id, item_description, due_date, support_needed, sort_order)
-       VALUES (?, ?, ?, ?, ?)`
-    ).run(planId, item.item_description, item.due_date ?? '', item.support_needed ?? '', item.sort_order ?? 0);
+      `INSERT INTO development_items (plan_id, item_description, due_date, support_needed, cost_estimate, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(planId, item.item_description, item.due_date ?? '', item.support_needed ?? '', (item as any).cost_estimate ?? '', item.sort_order ?? 0);
     const itemId = Number(itemResult.lastInsertRowid);
 
     for (const m of item.milestones ?? []) {

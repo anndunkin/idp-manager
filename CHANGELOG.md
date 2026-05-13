@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.2.0] - 2026-05-13
+### Changed
+- **Form** — Removed "Paul Selby's IDP Tool" branding from form title
+- **Form** — Removed "for import into the IDP system" from sub-banner text
+- **Form** — Removed step 4 from "How to Submit" section (now 3 steps only)
+- **Form** — Expanded to 9-column layout (A–I) to accommodate new Cost and Milestone sections
+- **USER_GUIDE.md** and **TECHNICAL.md** updated to v1.2.0; added Employee Input Form section with full cell address map
+
+### Added
+- **Section 3 — Est. Cost column** (`D14`–`D18`) in the Employee Input Form — free-text cost estimate per development item
+- **Section 4 — Quarterly Milestone Check-Ins** (rows 20–26) in the Employee Input Form — per-item Q1–Q4 Status + Notes grid
+- `cost_estimate TEXT NOT NULL DEFAULT ''` column added to `development_items` database table; backward-compatible `ALTER TABLE` migration runs on startup
+- `cost_estimate` field added to `DevelopmentItem` type (both `electron/types.ts` and `src/types/index.ts`), `ItemCreate`, `ItemUpdate`, and `IdpFilePayload`
+- `cost_estimate` persisted through `itemCreate`, `itemUpdate`, `buildFilePayload`, and `importFilePayload`
+- `importExcel.ts` updated: new NAMED_CELL_MAP matching v1.2.0 cell addresses, `cost_estimate` parsing from `D14`–`D18`, milestone grid parsing from rows 22–26
+- Milestone import skips rows where status = "Not Started" **and** notes = '' (no spurious empty records)
+
+### Tests
+- Updated `excelImport.test.ts` to v1.2.0 cell addresses; added Cost estimate tests, Section 4 milestone grid tests — 46 tests total
+- Updated `security.test.ts` to v1.2.0 cell addresses
+- Updated `database.test.ts` for `cost_estimate` field — 30 tests total
+- **Total: 200 tests (all passing)** across 7 test files
+
 ## [1.1.0] - 2026-05-13
 ### Added
 - **Employee Input Form (Excel)** — branded `.xlsx` template employees fill out and return to their manager

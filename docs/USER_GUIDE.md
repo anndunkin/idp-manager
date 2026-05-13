@@ -1,6 +1,6 @@
-# Paul Selby's IDP Tool — User Guide
+# IDP Manager — User Guide
 
-**Version:** 1.1.0  
+**Version:** 1.2.0  
 **Platform:** Windows 10/11 (x64)
 
 ---
@@ -28,7 +28,7 @@
 
 ## What Is This Tool?
 
-Paul Selby's IDP Tool is a desktop application for creating and tracking **Individual Development Plans (IDPs)** for employees in cybersecurity and technical roles. It helps managers:
+IDP Manager is a desktop application for creating and tracking **Individual Development Plans (IDPs)** for employees in cybersecurity and technical roles. It helps managers:
 
 - Document each team member's development goals
 - Define concrete action items with due dates and support requirements
@@ -133,6 +133,7 @@ Each plan starts with one item row. To add more:
 |---|---|
 | **Description** | What the employee will accomplish (e.g., "Earn CompTIA Security+ certification") |
 | **Due Date** | Target completion date |
+| **Estimated Cost** | Free-text cost estimate for this development item (e.g., `$500`, `~$2,000 incl. exam fee`) |
 | **Support Needed** | Resources required (e.g., "Training budget, study time allocation, exam fee") |
 
 ### Reordering Items
@@ -216,15 +217,24 @@ To get the template to send to an employee:
 
 ### What the Employee Fills Out
 
-The form has three sections:
+The form has four sections:
 
 | Section | Fields |
 |---|---|
 | **1 — Employee Information** | Full Name \*, Manager Name \*, Job Title, Department |
 | **2 — Development Plan Details** | Plan Date \*, Plan Year \*, Status (dropdown), Milestone Periods (dropdown), Plan Notes |
-| **3 — Development Items** | Up to 5 rows: Description \*, Due Date, Support Needed |
+| **3 — Development Items** | Up to 5 rows: Description \*, Due Date, Estimated Cost, Support Needed |
+| **4 — Quarterly Milestone Check-Ins** | Per-item Q1–Q4 Status and Notes columns |
 
 > Fields marked \* are required. The employee only needs to fill in the item rows they are using — blank rows are skipped on import.
+
+#### Estimated Cost
+
+Each development item row includes an **Est. Cost** column. Employees enter a free-text cost estimate (e.g., `$500`, `1200`, `~$2,000 incl. exam fee`). No specific format is enforced — it is stored and displayed exactly as entered.
+
+#### Section 4 — Quarterly Milestone Check-Ins
+
+Section 4 contains a grid with one row per development item (rows 22–26). Each row has columns for Q1 through Q4 Status and Notes. Employees optionally fill in their anticipated milestone status and any notes for each quarter. On import, milestone rows where both Status is "Not Started" and Notes are blank are skipped (treated as not yet planned).
 
 The **Status** and **Milestone Periods** fields have dropdown lists built into the spreadsheet:
 
@@ -250,7 +260,7 @@ The importer validates the form before creating any records. If a required field
 | Error | Fix |
 |---|---|
 | "Employee Full Name is required" | Employee left cell B5 blank |
-| "Manager Name is required" | Employee left cell F5 blank |
+| "Manager Name is required" | Employee left cell G5 blank |
 | "Plan Date is required" | Cell B9 is blank or not in YYYY-MM-DD format |
 | "At least one development item..." | All description cells (B14–B18) are blank |
 

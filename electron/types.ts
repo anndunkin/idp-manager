@@ -41,6 +41,8 @@ export interface DevelopmentItem {
   item_description: string;
   due_date: string;
   support_needed: string;
+  /** Estimated cost for this development item (free text, e.g. "$500" or "1200"). Default ''. */
+  cost_estimate: string;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -104,6 +106,8 @@ export interface IdpFilePayload {
   plan: Omit<DevelopmentPlan, 'id' | 'employee_id' | 'created_at' | 'updated_at'>; // includes milestone_count
   items: Array<
     Omit<DevelopmentItem, 'id' | 'plan_id' | 'created_at' | 'updated_at'> & {
+      /** cost_estimate is included in the payload (may be '' for older files) */
+      cost_estimate: string;
       milestones: Array<Omit<QuarterlyMilestone, 'id' | 'item_id' | 'updated_at'>>;
     }
   >;

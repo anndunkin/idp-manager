@@ -41,6 +41,8 @@ export interface DevelopmentItem {
   item_description: string;
   due_date: string;
   support_needed: string;
+  /** Estimated cost for this item (free text). Default ''. */
+  cost_estimate: string;
   sort_order: number;
   created_at: string;
   updated_at: string;

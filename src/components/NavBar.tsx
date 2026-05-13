@@ -225,7 +225,7 @@ export default function NavBar() {
 
       {/* Footer */}
       <div className="px-5 py-4 border-t border-primary-700">
-        <p className="text-primary-400 text-xs">v1.1.0</p>
+        <p className="text-primary-400 text-xs">v1.2.0</p>
       </div>
     </nav>
   );

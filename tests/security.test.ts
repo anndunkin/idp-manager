@@ -451,18 +451,26 @@ describe('Boundary and oversized input handling', () => {
 
 // ─── Excel Import Security ─────────────────────────────────────────────────────
 
-/** Helper: build a minimal valid Excel workbook with overridable field values */
+/** Helper: build a minimal valid Excel workbook with overridable field values (v1.2.0 cell addresses) */
 async function buildSecurityTestWorkbook(overrides: Record<string, ExcelJS.CellValue>): Promise<string> {
   const CELL_MAP: Record<string, string> = {
-    employee_name: 'B5', manager_name: 'F5',
-    job_title: 'B6', department: 'F6',
-    plan_date: 'B9', plan_year: 'D9',
-    status: 'F9', milestone_count: 'B10', plan_notes: 'D10',
-    item1_description: 'B14', item1_due_date: 'C14', item1_support_needed: 'D14',
-    item2_description: 'B15', item2_due_date: 'C15', item2_support_needed: 'D15',
-    item3_description: 'B16', item3_due_date: 'C16', item3_support_needed: 'D16',
-    item4_description: 'B17', item4_due_date: 'C17', item4_support_needed: 'D17',
-    item5_description: 'B18', item5_due_date: 'C18', item5_support_needed: 'D18',
+    // Section 1
+    employee_name: 'B5', manager_name: 'G5',
+    job_title: 'B6', department: 'G6',
+    // Section 2
+    plan_date: 'B9', plan_year: 'E9',
+    status: 'G9', milestone_count: 'B10', plan_notes: 'E10',
+    // Section 3
+    item1_description: 'B14', item1_due_date: 'C14', item1_cost_estimate: 'D14', item1_support_needed: 'E14',
+    item2_description: 'B15', item2_due_date: 'C15', item2_cost_estimate: 'D15', item2_support_needed: 'E15',
+    item3_description: 'B16', item3_due_date: 'C16', item3_cost_estimate: 'D16', item3_support_needed: 'E16',
+    item4_description: 'B17', item4_due_date: 'C17', item4_cost_estimate: 'D17', item4_support_needed: 'E17',
+    item5_description: 'B18', item5_due_date: 'C18', item5_cost_estimate: 'D18', item5_support_needed: 'E18',
+    // Section 4 milestones
+    item1_q1_status: 'B22', item1_q1_notes: 'C22',
+    item1_q2_status: 'D22', item1_q2_notes: 'E22',
+    item1_q3_status: 'F22', item1_q3_notes: 'G22',
+    item1_q4_status: 'H22', item1_q4_notes: 'I22',
   };
   const defaults: Record<string, ExcelJS.CellValue> = {
     employee_name: 'Test User', manager_name: 'Test Manager',

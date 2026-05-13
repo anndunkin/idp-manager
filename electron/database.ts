@@ -60,6 +60,7 @@ export function initSchema(database: Database.Database): void {
       item_description TEXT    NOT NULL,
       due_date         TEXT    NOT NULL DEFAULT '',
       support_needed   TEXT    NOT NULL DEFAULT '',
+      cost_estimate    TEXT    NOT NULL DEFAULT '',
       sort_order       INTEGER NOT NULL DEFAULT 0,
       created_at       DATETIME DEFAULT (datetime('now')),
       updated_at       DATETIME DEFAULT (datetime('now'))
@@ -79,10 +80,15 @@ export function initSchema(database: Database.Database): void {
 
   // ─── Migrations for existing databases ───────────────────────────────────────
   // Add milestone_count if it doesn't exist (safe to run every time)
-  const cols = database.prepare(`PRAGMA table_info(development_plans)`).all() as Array<{ name: string }>;
-  const hasMilestoneCount = cols.some(c => c.name === 'milestone_count');
-  if (!hasMilestoneCount) {
+  const planCols = database.prepare(`PRAGMA table_info(development_plans)`).all() as Array<{ name: string }>;
+  if (!planCols.some(c => c.name === 'milestone_count')) {
     database.exec(`ALTER TABLE development_plans ADD COLUMN milestone_count INTEGER NOT NULL DEFAULT 4`);
+  }
+
+  // Add cost_estimate to development_items if it doesn't exist
+  const itemCols = database.prepare(`PRAGMA table_info(development_items)`).all() as Array<{ name: string }>;
+  if (!itemCols.some(c => c.name === 'cost_estimate')) {
+    database.exec(`ALTER TABLE development_items ADD COLUMN cost_estimate TEXT NOT NULL DEFAULT ''`);
   }
 }
 
@@ -226,13 +232,14 @@ export function itemCreate(database: Database.Database, data: ItemCreate): Devel
   ).get(data.plan_id) as { m: number }).m;
 
   const result = database.prepare(`
-    INSERT INTO development_items (plan_id, item_description, due_date, support_needed, sort_order)
-    VALUES (@plan_id, @item_description, @due_date, @support_needed, @sort_order)
+    INSERT INTO development_items (plan_id, item_description, due_date, support_needed, cost_estimate, sort_order)
+    VALUES (@plan_id, @item_description, @due_date, @support_needed, @cost_estimate, @sort_order)
   `).run({
     plan_id: data.plan_id,
     item_description: data.item_description.trim(),
     due_date: (data.due_date ?? '').trim(),
     support_needed: (data.support_needed ?? '').trim(),
+    cost_estimate: (data.cost_estimate ?? '').trim(),
     sort_order: data.sort_order ?? (maxOrder + 1),
   });
 
@@ -247,6 +254,7 @@ export function itemUpdate(database: Database.Database, id: number, data: ItemUp
     item_description: ((data.item_description ?? existing.item_description)).trim(),
     due_date: ((data.due_date ?? existing.due_date) ?? '').trim(),
     support_needed: ((data.support_needed ?? existing.support_needed) ?? '').trim(),
+    cost_estimate: ((data.cost_estimate ?? existing.cost_estimate) ?? '').trim(),
     sort_order: data.sort_order ?? existing.sort_order,
   };
 
@@ -255,8 +263,8 @@ export function itemUpdate(database: Database.Database, id: number, data: ItemUp
   database.prepare(`
     UPDATE development_items
     SET item_description = @item_description, due_date = @due_date,
-        support_needed = @support_needed, sort_order = @sort_order,
-        updated_at = datetime('now')
+        support_needed = @support_needed, cost_estimate = @cost_estimate,
+        sort_order = @sort_order, updated_at = datetime('now')
     WHERE id = @id
   `).run({ ...merged, id });
 
