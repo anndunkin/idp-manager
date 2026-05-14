@@ -373,9 +373,10 @@ ipcMain.handle('import:fromExcel', async (): Promise<ExcelImportFileResult> => {
 ipcMain.handle('import:downloadTemplate', async (): Promise<{ success: boolean; filePath?: string; error?: string }> => {
   try {
     // Dynamically require the generator script (CJS, not bundled by Vite)
-    // In production the script lives in resources/app.asar/scripts/
+    // In production the script is placed outside the asar via extraResources:
+    //   resources/scripts/generateFormTemplate.js
     const scriptPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'app.asar', 'scripts', 'generateFormTemplate.js')
+      ? path.join(process.resourcesPath, 'scripts', 'generateFormTemplate.js')
       : path.join(__dirname, '..', '..', 'scripts', 'generateFormTemplate.js');
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires

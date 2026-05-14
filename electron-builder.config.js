@@ -11,6 +11,9 @@ module.exports = {
     "!node_modules/.bin",
     "prebuilt-win32-x64/**/*"
   ],
+  extraResources: [
+    { from: 'scripts/generateFormTemplate.js', to: 'scripts/generateFormTemplate.js' }
+  ],
   asar: true,
   asarUnpack: [
     "node_modules/better-sqlite3/build/Release/*.node",
