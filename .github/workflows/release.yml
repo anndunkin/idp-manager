@@ -28,19 +28,25 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # ── 3. Install dependencies (no native rebuild — we use prebuilt binary) ─
+      # ── 3. Install dependencies ─────────────────────────────────────────────
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # ── 4. Run full test suite ───────────────────────────────────────────────
+      # ── 4. Build better-sqlite3 native binding for tests ─────────────────────
+      # The packaged app uses the prebuilt binary (injected by afterPack.js),
+      # but the test runner needs a native .node built for the host Node version.
+      - name: Build better-sqlite3 for test runner
+        run: npx node-gyp rebuild --directory node_modules/better-sqlite3
+
+      # ── 5. Run full test suite ───────────────────────────────────────────────
       - name: Run tests
         run: npx vitest run
 
-      # ── 5. Vite + tsc production build ───────────────────────────────────────
+      # ── 6. Vite + tsc production build ───────────────────────────────────────
       - name: Build (Vite + tsc)
         run: npm run build
 
-      # ── 6. Package with electron-builder (zip + nsis) ────────────────────────
+      # ── 7. Package with electron-builder (zip + nsis) ────────────────────────
       - name: Package Windows installers
         run: npx electron-builder --win --x64 --config electron-builder.config.js
         env:
@@ -48,13 +54,13 @@ jobs:
           # or downstream consumers can sign with their own cert.
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      # ── 7. Extract version from tag (strips leading 'v') ─────────────────────
+      # ── 8. Extract version from tag (strips leading 'v') ─────────────────────
       - name: Extract version
         id: version
         shell: bash
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      # ── 8. Locate build artifacts ─────────────────────────────────────────────
+      # ── 9. Locate build artifacts ─────────────────────────────────────────────
       - name: Locate artifacts
         id: artifacts
         shell: bash
@@ -66,7 +72,7 @@ jobs:
           echo "Found ZIP: $ZIP"
           echo "Found EXE: $EXE"
 
-      # ── 9. Extract release notes for this version from CHANGELOG.md ──────────
+      # ── 10. Extract release notes for this version from CHANGELOG.md ──────────
       - name: Extract release notes
         id: release_notes
         shell: bash
@@ -79,7 +85,7 @@ jobs:
           echo "Release notes extracted for v$VERSION"
           cat release_notes.txt
 
-      # ── 10. Create GitHub Release and upload assets ───────────────────────────
+      # ── 11. Create GitHub Release and upload assets ───────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
