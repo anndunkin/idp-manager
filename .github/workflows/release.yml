@@ -83,7 +83,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "Paul Selby's IDP Tool v${{ steps.version.outputs.VERSION }}"
+          name: "IDP Manager v${{ steps.version.outputs.VERSION }}"
           tag_name: ${{ github.ref_name }}
           body_path: release_notes.txt
           draft: false

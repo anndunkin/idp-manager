@@ -1,11 +1,11 @@
-# Paul Selby's IDP Tool
+# IDP Manager
 
 A desktop application for creating and tracking **Individual Development Plans** for cybersecurity and technical teams.
 
 [![Latest Release](https://img.shields.io/github/v/release/anndunkin/idp-manager?label=Download&logo=windows&style=for-the-badge)](https://github.com/anndunkin/idp-manager/releases/latest)
-[![Tests](https://img.shields.io/badge/tests-144%20passing-brightgreen?style=for-the-badge)](https://github.com/anndunkin/idp-manager/actions)
+[![Tests](https://img.shields.io/badge/tests-200%20passing-brightgreen?style=for-the-badge)](https://github.com/anndunkin/idp-manager/actions)
 
-**Version:** 1.0.8 | **Platform:** Windows 10/11 x64 | **Stack:** Electron · React · TypeScript · SQLite
+**Version:** 1.2.0 | **Platform:** Windows 10/11 x64 | **Stack:** Electron · React · TypeScript · SQLite
 
 ---
 
@@ -13,9 +13,10 @@ A desktop application for creating and tracking **Individual Development Plans**
 
 - **Employee profiles** — name, manager, job title, department
 - **Development plans** — plan date, year, status, notes
-- **Development items** — descriptions, due dates, support needed, drag-to-reorder
+- **Development items** — descriptions, due dates, estimated cost, support needed, drag-to-reorder
 - **Configurable milestone periods** — 2 (semi-annual), 3 (thirds), 4 (quarterly), 6 (bi-monthly), or 12 (monthly)
 - **Milestone tracking** — status (Not Started / In Progress / Complete), % complete, notes
+- **Employee Input Form** — Excel template for employees to fill out and return; managers import it directly into the app
 - **File management** — Save, Save As, and Open `.idp` files (portable JSON snapshots)
 - **Exports** — Excel, Word, and PDF reports with dynamic milestone columns
 - **Auto-open exports** — exported files open immediately in the default application
@@ -44,9 +45,15 @@ Download the latest release from the **[Releases page](https://github.com/anndun
 2. Click **+ New Employee** and fill in the employee details
 3. Click **+ New IDP** to create a development plan
 4. Choose a **Milestone Periods** setting (default: 4 quarterly)
-5. Add development items with descriptions, due dates, and support needed
+5. Add development items with descriptions, due dates, estimated cost, and support needed
 6. Track progress by clicking the edit icon in any milestone cell
 7. Export to Excel, Word, or PDF via the Export buttons
+
+### Employee Input Form
+
+1. Click **Get Form Template** in the NavBar to download the Excel form
+2. Send the `.xlsx` file to the employee to fill out
+3. When the employee returns the completed form, click **Import Employee Form** to load it directly into the app
 
 ---
 
@@ -65,7 +72,7 @@ Download the latest release from the **[Releases page](https://github.com/anndun
 ## Documentation
 
 - [User Guide](docs/USER_GUIDE.md) — Installation, features, and how-to instructions
-- [Technical Documentation](docs/TECHNICAL.md) — Architecture, schema, IPC API, build pipeline
+- [Technical Documentation](docs/TECHNICAL.md) — Architecture, schema, IPC API, build pipeline, Employee Input Form cell map
 
 ---
 
@@ -74,7 +81,7 @@ Download the latest release from the **[Releases page](https://github.com/anndun
 ```bash
 npm install         # Install dependencies
 npm run dev         # Run in development mode
-npx vitest run      # Run test suite (144 tests)
+npx vitest run      # Run test suite (200 tests)
 npm run build       # Production build
 ```
 
@@ -87,6 +94,7 @@ npm run build       # Production build
 | Bundler | Vite 5 |
 | Styles | Tailwind CSS |
 | Database | better-sqlite3 12.9.0 (SQLite) |
+| Excel | ExcelJS 4 |
 | Tests | Vitest + @testing-library/react |
 
 ---
