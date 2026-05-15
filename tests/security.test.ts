@@ -239,22 +239,26 @@ describe('XSS input handling — stored safely as plain text', () => {
 
 describe('Path traversal safety', () => {
   it('path.join normalizes traversal sequences', () => {
-    // Simulate the kind of path normalization the file:save handler should do
-    const base = '/home/user/documents';
-    const unsafe = '../../etc/passwd';
+    // Simulate the kind of path normalization the file:save handler should do.
+    // Use os.tmpdir() as a cross-platform base directory that actually exists.
+    const base = path.join(os.tmpdir(), 'documents');
+    const unsafe = path.join('..', '..', 'sensitive', 'passwd');
     const normalized = path.resolve(base, unsafe);
     // The resolved path escapes the intended directory — this confirms
     // file operations MUST use path.resolve + verify the result stays in bounds.
     expect(normalized).not.toContain('documents');
-    expect(normalized).toContain('etc/passwd');
+    expect(normalized).toContain('sensitive');
+    expect(normalized).toContain('passwd');
+    expect(normalized.startsWith(base)).toBe(false);
   });
 
   it('path.resolve with absolute attacker path ignores base', () => {
-    const base = '/home/user/documents';
-    const absoluteAttack = '/etc/shadow';
+    const base = path.join(os.tmpdir(), 'documents');
+    // Use a path that is guaranteed to differ from base on any OS
+    const absoluteAttack = path.resolve(os.tmpdir(), 'shadow');
     const resolved = path.resolve(base, absoluteAttack);
     // path.resolve with an absolute second arg returns the absolute path — must be guarded
-    expect(resolved).toBe('/etc/shadow');
+    expect(resolved).toBe(absoluteAttack);
     expect(resolved.startsWith(base)).toBe(false);
   });
 
