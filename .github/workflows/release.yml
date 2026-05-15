@@ -48,10 +48,9 @@ jobs:
 
       # ── 7. Package with electron-builder (zip + nsis) ────────────────────────
       - name: Package Windows installers
-        run: npx electron-builder --win --x64 --config electron-builder.config.js
+        run: npx electron-builder --win --x64 --config electron-builder.config.js --publish never
         env:
-          # Disable code signing in CI — artifacts are signed separately
-          # or downstream consumers can sign with their own cert.
+          # Disable code signing — artifacts are signed separately.
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
       # ── 8. Extract version from tag (strips leading 'v') ─────────────────────
