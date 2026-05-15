@@ -57,7 +57,10 @@
 
 'use strict';
 
-const ExcelJS = require('exceljs');
+// ExcelJS is require()'d lazily inside generateBuffer() so that callers
+// running from outside app.asar (e.g. the packaged extraResources location)
+// can inject a pre-resolved ExcelJS instance via generateBuffer({ ExcelJS }).
+// When called as a standalone CLI script it self-resolves.
 const path = require('path');
 const fs = require('fs');
 
@@ -124,7 +127,11 @@ function spacer(ws, row) {
 
 // ─── Main generator ──────────────────────────────────────────────────────────
 
-async function generateBuffer() {
+async function generateBuffer(opts) {
+  // Accept an injected ExcelJS (used in packaged builds where this script
+  // lives outside app.asar and cannot resolve bare node_modules itself).
+  // Falls back to a local require() when run as a standalone CLI script.
+  const ExcelJS = (opts && opts.ExcelJS) ? opts.ExcelJS : require('exceljs');
   const wb = new ExcelJS.Workbook();
   wb.creator = 'IDP Manager';
   wb.lastModifiedBy = 'IDP Manager v1.2.0';

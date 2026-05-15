@@ -380,8 +380,13 @@ ipcMain.handle('import:downloadTemplate', async (): Promise<{ success: boolean; 
       : path.join(__dirname, '..', '..', 'scripts', 'generateFormTemplate.js');
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { generateBuffer } = require(scriptPath) as { generateBuffer: () => Promise<Buffer> };
-    const buffer = await generateBuffer();
+    const { generateBuffer } = require(scriptPath) as { generateBuffer: (opts?: { ExcelJS?: unknown }) => Promise<Buffer> };
+    // Inject ExcelJS resolved from inside app.asar/node_modules so that the
+    // script (which lives outside the asar in extraResources) doesn't need to
+    // resolve bare module specifiers from a path with no node_modules.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ExcelJS = require('exceljs');
+    const buffer = await generateBuffer({ ExcelJS });
     return saveExportFile('IDP_Employee_Input_Form.xlsx', buffer);
   } catch (err) { return { success: false, error: String(err) }; }
 });
