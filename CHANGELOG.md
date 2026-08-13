@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.1] - 2026-08-13
+### Changed
+- Full dependency modernization: Electron 43.4.0, React 19.2.8, React Router 7.18.2, Vite 8.2.1, Vitest 4.1.10, Tailwind CSS 4.3.3, ESLint 10.8.1, current testing/export tooling, and updated type packages.
+- Replaced React Router DOM imports with React Router 7 imports; migrated Tailwind's PostCSS integration and ESLint to flat configuration.
+- Rebuilt the Windows packaging workflow around `electron-rebuild` / Electron ABI 148 instead of injecting the obsolete Electron 41 native binary.
+- Updated `better-sqlite3` to 12.11.1 and retained its deliberate 12.x pin; 13.x segfaults in the Node 20 sandbox.
+- Retained jsdom at 29.1.1 because latest jsdom 30 requires Node 22.22.2+, and retained TypeScript at 5.9.3 because the current stable TypeScript ESLint parser supports TypeScript below 6.1.
+
+### Validation
+- `npm run lint` passes.
+- `npm test` passes: 200 tests across 7 files.
+- `npm run build` and `npx tsc --noEmit` pass.
+- keyv@4.5.4 and cacheable-request@7.0.4 security overrides verified after reinstall.
+
 ## [1.2.0] - 2026-05-13
 ### Changed
 - **Form** — Removed "Paul Selby's IDP Tool" branding from form title

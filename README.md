@@ -5,7 +5,7 @@ A desktop application for creating and tracking **Individual Development Plans**
 [![Latest Release](https://img.shields.io/github/v/release/anndunkin/idp-manager?label=Download&logo=windows&style=for-the-badge)](https://github.com/anndunkin/idp-manager/releases/latest)
 [![Tests](https://img.shields.io/badge/tests-200%20passing-brightgreen?style=for-the-badge)](https://github.com/anndunkin/idp-manager/actions)
 
-**Version:** 1.2.0 | **Platform:** Windows 10/11 x64 | **Stack:** Electron · React · TypeScript · SQLite
+**Version:** 1.2.1 | **Platform:** Windows 10/11 x64 | **Stack:** Electron · React · TypeScript · SQLite
 
 ---
 
@@ -89,13 +89,21 @@ npm run build       # Production build
 
 | Layer | Technology |
 |---|---|
-| Shell | Electron 41.5.0 |
-| UI | React 18 + TypeScript |
-| Bundler | Vite 5 |
-| Styles | Tailwind CSS |
-| Database | better-sqlite3 12.9.0 (SQLite) |
+| Shell | Electron 43.4.0 |
+| UI | React 19.2.8 + TypeScript 5.9.3 |
+| Bundler | Vite 8.2.1 |
+| Styles | Tailwind CSS 4.3.3 |
+| Database | better-sqlite3 12.11.1 (SQLite) |
 | Excel | ExcelJS 4 |
-| Tests | Vitest + @testing-library/react |
+| Tests | Vitest 4.1.10 + @testing-library/react 16.3.2 |
+
+---
+
+## Dependency modernization (v1.2.1)
+
+This release upgrades the desktop shell to **Electron 43.4.0** and modernizes the application stack: React 19, React Router 7, Vite 8, Vitest 4, Tailwind CSS 4, ESLint 10 flat configuration, and current export/testing tooling. Windows releases now rebuild `better-sqlite3` for Electron's target ABI during packaging.
+
+For validated runtime compatibility, `better-sqlite3` remains on the 12.x line (12.11.1); 13.x segfaults in the provided Node 20 sandbox. jsdom remains on 29.1.1 because jsdom 30 requires Node 22.22.2+.
 
 ---
 

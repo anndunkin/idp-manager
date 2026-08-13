@@ -1,7 +1,7 @@
 # IDP Manager — Technical Documentation
 
-**Version:** 1.2.0  
-**Last Updated:** 2026-05-13  
+**Version:** 1.2.1
+**Last Updated:** 2026-08-13
 **Repository:** https://github.com/anndunkin/idp-manager
 
 ---
