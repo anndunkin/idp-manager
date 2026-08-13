@@ -32,11 +32,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # ── 4. Build better-sqlite3 for Electron's target ABI ───────────────────
-      # Electron 43 uses ABI 148; rebuilding prevents a stale host-Node binary
-      # from being packaged into the Windows release.
-      - name: Rebuild better-sqlite3 for Electron
-        run: npx electron-rebuild -f -w better-sqlite3
+      # ── 4. Build better-sqlite3 for the host Node ABI (tests run under plain Node) ─
+      # npm ci --ignore-scripts skipped compiling the native module entirely, so
+      # we build it once here for the host Node.js ABI (127) that Vitest runs under.
+      - name: Build better-sqlite3 for test runner
+        run: npx node-gyp rebuild --directory node_modules/better-sqlite3
 
       # ── 5. Run full test suite ───────────────────────────────────────────────
       - name: Run tests
@@ -46,20 +46,29 @@ jobs:
       - name: Build (Vite + tsc)
         run: npm run build
 
-      # ── 7. Package with electron-builder (zip + nsis) ────────────────────────
+      # ── 7. Rebuild better-sqlite3 for Electron's target ABI ──────────────────
+      # Electron 43 uses ABI 148, different from the host Node ABI (127) used
+      # above for tests. Rebuild now, after tests, so the packaged app gets a
+      # binary compiled fresh against Electron 43 rather than a stale vendored
+      # or host-Node build (better-sqlite3's official prebuilds only cover up
+      # to ABI 146 / Electron 42).
+      - name: Rebuild better-sqlite3 for Electron
+        run: npx electron-rebuild -f -w better-sqlite3
+
+      # ── 8. Package with electron-builder (zip + nsis) ────────────────────────
       - name: Package Windows installers
         run: npx electron-builder --win --x64 --config electron-builder.config.js --publish never
         env:
           # Disable code signing — artifacts are signed separately.
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      # ── 8. Extract version from tag (strips leading 'v') ─────────────────────
+      # ── 9. Extract version from tag (strips leading 'v') ─────────────────────
       - name: Extract version
         id: version
         shell: bash
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      # ── 9. Locate build artifacts ─────────────────────────────────────────────
+      # ── 10. Locate build artifacts ─────────────────────────────────────────────
       - name: Locate artifacts
         id: artifacts
         shell: bash
@@ -71,7 +80,7 @@ jobs:
           echo "Found ZIP: $ZIP"
           echo "Found EXE: $EXE"
 
-      # ── 10. Extract release notes for this version from CHANGELOG.md ──────────
+      # ── 11. Extract release notes for this version from CHANGELOG.md ──────────
       - name: Extract release notes
         id: release_notes
         shell: bash
@@ -84,7 +93,7 @@ jobs:
           echo "Release notes extracted for v$VERSION"
           cat release_notes.txt
 
-      # ── 11. Create GitHub Release and upload assets ───────────────────────────
+      # ── 12. Create GitHub Release and upload assets ───────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
