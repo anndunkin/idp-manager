@@ -60,22 +60,22 @@ Paul Selby's IDP Tool is a desktop application built with Electron, using a **th
 
 | Layer | Technology | Version |
 |---|---|---|
-| Shell | Electron | 41.5.0 |
-| UI Framework | React | 18.x |
-| Language | TypeScript | 5.x |
-| Bundler | Vite | 5.x |
-| Styling | Tailwind CSS | 3.x |
-| Database | better-sqlite3 | 12.9.0 |
+| Shell | Electron | 43.4.0 |
+| UI Framework | React | 19.2.8 |
+| Language | TypeScript | 5.9.3 |
+| Bundler | Vite | 8.2.1 |
+| Styling | Tailwind CSS | 4.3.3 |
+| Database | better-sqlite3 | 12.11.1 |
 | Excel Export | ExcelJS | latest |
 | Word Export | docx | latest |
-| PDF Export | pdfkit | latest |
-| Test Runner | Vitest | 1.x |
+| PDF Export | jsPDF + jsPDF-AutoTable | 4.2.1 / 5.0.8 |
+| Test Runner | Vitest | 4.1.10 |
 | UI Testing | @testing-library/react | latest |
 | Packager | electron-builder | latest |
 | Code Signing | osslsigncode | 2.9 |
 
-**Why Electron 41.5.0?**  
-`better-sqlite3` v12.9.0 requires native module ABI 145 (`electron-v145`). Electron 41.5.0 matches this exactly. Upgrading Electron past this version would require rebuilding or updating the prebuilt native binary.
+**Native module compatibility**
+Electron 43.4.0 uses ABI 148 (`electron-v148`). The release workflow rebuilds `better-sqlite3` v12.11.1 for Electron before packaging, so the shipped binary always matches the target Electron ABI.
 
 ---
 
@@ -119,10 +119,9 @@ idp-manager/
 │   ├── setup.ts                # @testing-library/jest-dom setup
 │   └── __mocks__/electron.ts   # Electron mock for test environment
 ├── scripts/
-│   ├── afterPack.js      # Injects prebuilt Win32 better_sqlite3.node after pack
 │   └── installer.nsh     # NSIS customInit: sets $INSTDIR to $EXEDIR\IDP Manager
 ├── prebuilt-win32-x64/
-│   └── better_sqlite3.node   # v12.9.0 electron-v145 win32-x64 (ABI 145)
+│   └── better_sqlite3.node   # legacy artifact; no longer packaged
 ├── certs/
 │   ├── signing.crt       # Public certificate (committed to repo)
 │   ├── signing.key        # Private key — NOT committed (in .gitignore)
@@ -136,7 +135,7 @@ idp-manager/
 ├── dist/                 # Vite renderer output (git-ignored)
 ├── dist-installer/       # electron-builder output (git-ignored)
 ├── electron-builder.config.js
-├── vite.config.ts        # Vite + Vitest configuration
+├── vite.config.mts       # Vite + Vitest configuration
 ├── tsconfig.json         # Renderer TypeScript config
 ├── tsconfig.node.json    # Electron main process TypeScript config
 ├── package.json
@@ -573,13 +572,9 @@ osslsigncode sign \
   -out <signed.exe>
 ```
 
-### Why `npmRebuild: false`
+### Native module rebuilds
 
-`better-sqlite3` requires a native `.node` binary compiled for the exact Electron ABI. Cross-compiling on Linux for Windows is not reliable. The solution:
-
-1. A prebuilt Windows binary for `better-sqlite3` v12.9.0 / electron-v145 is stored at `prebuilt-win32-x64/better_sqlite3.node`
-2. `scripts/afterPack.js` copies it into the packaged app after electron-builder finishes
-3. `npmRebuild: false` in `electron-builder.config.js` prevents electron-builder from trying to rebuild native modules
+`better-sqlite3` requires a native `.node` binary compiled for the exact Electron ABI. The Windows release workflow runs `electron-rebuild` for Electron 43 / electron-v148 before packaging, and `electron-builder` keeps `npmRebuild: true` as an additional target-ABI safeguard. The legacy prebuilt binary is retained only as repository history and is excluded from release artifacts.
 
 ---
 

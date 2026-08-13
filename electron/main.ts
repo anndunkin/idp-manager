@@ -295,7 +295,7 @@ function importFilePayload(payload: IdpFilePayload): number {
     const itemResult = db.prepare(
       `INSERT INTO development_items (plan_id, item_description, due_date, support_needed, cost_estimate, sort_order)
        VALUES (?, ?, ?, ?, ?, ?)`
-    ).run(planId, item.item_description, item.due_date ?? '', item.support_needed ?? '', (item as any).cost_estimate ?? '', item.sort_order ?? 0);
+    ).run(planId, item.item_description, item.due_date ?? '', item.support_needed ?? '', item.cost_estimate ?? '', item.sort_order ?? 0);
     const itemId = Number(itemResult.lastInsertRowid);
 
     for (const m of item.milestones ?? []) {
@@ -379,12 +379,10 @@ ipcMain.handle('import:downloadTemplate', async (): Promise<{ success: boolean; 
       ? path.join(process.resourcesPath, 'scripts', 'generateFormTemplate.js')
       : path.join(__dirname, '..', '..', 'scripts', 'generateFormTemplate.js');
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { generateBuffer } = require(scriptPath) as { generateBuffer: (opts?: { ExcelJS?: unknown }) => Promise<Buffer> };
     // Inject ExcelJS resolved from inside app.asar/node_modules so that the
     // script (which lives outside the asar in extraResources) doesn't need to
     // resolve bare module specifiers from a path with no node_modules.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const ExcelJS = require('exceljs');
     const buffer = await generateBuffer({ ExcelJS });
     return saveExportFile('IDP_Employee_Input_Form.xlsx', buffer);

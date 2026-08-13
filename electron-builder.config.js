@@ -8,8 +8,7 @@ module.exports = {
     "node_modules/**/*",
     "!node_modules/*/{CHANGELOG.md,README.md,readme.md}",
     "!node_modules/*/{test,__tests__,tests,example,examples}",
-    "!node_modules/.bin",
-    "prebuilt-win32-x64/**/*"
+    "!node_modules/.bin"
   ],
   extraResources: [
     { from: 'scripts/generateFormTemplate.js', to: 'scripts/generateFormTemplate.js' }
@@ -19,8 +18,8 @@ module.exports = {
     "node_modules/better-sqlite3/build/Release/*.node",
     "electron/dist/preload.js"
   ],
-  npmRebuild: false,
-  afterPack: "./scripts/afterPack.js",
+  // Rebuild better-sqlite3 against the target Electron ABI while packaging.
+  npmRebuild: true,
   win: {
     target: [
       { target: "zip", arch: ["x64"] },

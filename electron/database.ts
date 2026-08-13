@@ -13,7 +13,6 @@ let db: Database.Database;
 export function getDatabase(): Database.Database {
   if (!db) {
     // Dynamic import of electron app to avoid breaking in test environments
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { app } = require('electron') as typeof import('electron');
     const userDataPath = app.getPath('userData');
     const dbPath = path.join(userDataPath, 'idp-manager.db');

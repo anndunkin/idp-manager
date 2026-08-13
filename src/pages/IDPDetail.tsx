@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router';
 import type {
   PlanWithItems, DevelopmentItemWithMilestones,
   QuarterlyMilestone, MilestoneStatus, Quarter, PlanStatus
@@ -97,6 +97,7 @@ function AddItemForm({ planId, sortOrder, onSaved, onCancel }: AddItemFormProps)
         item_description: desc.trim(),
         due_date: dueDate,
         support_needed: support.trim(),
+        cost_estimate: '',
         sort_order: sortOrder,
       });
       onSaved();
