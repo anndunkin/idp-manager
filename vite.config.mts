@@ -7,7 +7,7 @@ export default defineConfig({
   base: './',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   build: {
@@ -32,7 +32,7 @@ export default defineConfig({
       ['tests/security.test.ts', 'node'],
     ],
     alias: [
-      { find: 'electron', replacement: path.resolve(__dirname, 'tests/__mocks__/electron.ts') },
+      { find: 'electron', replacement: path.resolve(import.meta.dirname, 'tests/__mocks__/electron.ts') },
     ],
   },
 })

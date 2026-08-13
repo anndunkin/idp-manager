@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import type { Employee, DevelopmentPlan, EmployeeWithPlanSummary, DashboardStats } from '../types';
 
 function StatCard({ title, value, subtitle, color }: { title: string; value: string | number; subtitle?: string; color: string }) {
@@ -60,7 +60,6 @@ export default function Dashboard() {
   // Stats computation
   const stats: DashboardStats = useMemo(() => {
     const now = new Date();
-    const currentQ = Math.ceil((now.getMonth() + 1) / 3);
     const currentYear = now.getFullYear();
 
     let activePlans = 0;

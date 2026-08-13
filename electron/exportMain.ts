@@ -2,7 +2,7 @@ import ExcelJS from 'exceljs';
 import {
   Document, Paragraph, Table, TableRow, TableCell,
   TextRun, HeadingLevel, AlignmentType, WidthType,
-  BorderStyle, ShadingType, Packer,
+  ShadingType, Packer,
 } from 'docx';
 import type { PlanWithItems, QuarterlyMilestone } from './types';
 
@@ -289,11 +289,9 @@ export async function exportToPdfBuffer(plan: PlanWithItems): Promise<Buffer> {
   const mCount = plan.milestone_count ?? 4;
   const ps = periods(mCount);
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const jspdfMod = require('jspdf') as { jsPDF?: typeof import('jspdf').jsPDF; default?: { jsPDF?: typeof import('jspdf').jsPDF } };
+    const jspdfMod = require('jspdf') as { jsPDF?: typeof import('jspdf').jsPDF; default?: { jsPDF?: typeof import('jspdf').jsPDF } };
   const jsPDF = (jspdfMod.jsPDF ?? jspdfMod.default?.jsPDF) as typeof import('jspdf').jsPDF;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const atModule = require('jspdf-autotable') as { autoTable?: (doc: unknown, options: unknown) => void; default?: (doc: unknown, options: unknown) => void } & ((doc: unknown, options: unknown) => void);
+    const atModule = require('jspdf-autotable') as { autoTable?: (doc: unknown, options: unknown) => void; default?: (doc: unknown, options: unknown) => void } & ((doc: unknown, options: unknown) => void);
   const autoTable = (atModule.autoTable ?? atModule.default ?? atModule) as (doc: unknown, options: unknown) => void;
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });

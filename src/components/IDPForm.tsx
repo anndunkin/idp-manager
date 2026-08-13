@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Employee, PlanCreate, ItemCreate, PlanStatus } from '../types';
+import type { Employee, PlanStatus } from '../types';
 import { MILESTONE_PRESETS } from '../utils/milestoneLabels';
 
 export interface NewIDPFormData {

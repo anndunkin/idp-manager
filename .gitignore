@@ -10,3 +10,4 @@ dist-installer/
 dist/
 certs/signing.key
 certs/signing.pfx
+*.tsbuildinfo

@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import MilestoneTracker, { MilestoneCell } from '../src/components/MilestoneTracker';
 import IDPForm from '../src/components/IDPForm';
 import type { QuarterlyMilestone, Employee } from '../src/types';

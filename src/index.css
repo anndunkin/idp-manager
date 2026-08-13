@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
 /* Bundled Inter font — no external network requests needed */
 @font-face { font-family: 'Inter'; font-style: normal; font-weight: 300; font-display: swap; src: url('./assets/fonts/inter-300.ttf') format('truetype'); }
 @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url('./assets/fonts/inter-400.ttf') format('truetype'); }
@@ -5,9 +8,6 @@
 @font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url('./assets/fonts/inter-600.ttf') format('truetype'); }
 @font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap; src: url('./assets/fonts/inter-700.ttf') format('truetype'); }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   html, body, #root {

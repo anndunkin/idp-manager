@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router';
 import IDPForm, { type NewIDPFormData } from '../components/IDPForm';
 import type { Employee } from '../types';
 
@@ -43,6 +43,7 @@ export default function NewIDP() {
           item_description: data.items[i].item_description,
           due_date: data.items[i].due_date,
           support_needed: data.items[i].support_needed,
+          cost_estimate: '',
           sort_order: i,
         });
       }
