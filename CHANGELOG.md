@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.2] - 2026-11-02
+### Security
+- Electron 43.4.0 -> 43.8.6 (patch release on the same major; fixes advisories against 43.4.0).
+- Cleared all 3 critical and 11 high audit findings: concurrently 10.0.6, vite 8.3.5, vitest 4.1.12, plus transitive fixes for dompurify, shell-quote, axios, joi, follow-redirects, source-map-js, @xmldom/xmldom, brace-expansion, fast-uri, js-yaml and undici.
+- `keyv` 4.5.4 and `cacheable-request` 7.0.4 overrides verified intact.
+
+### Changed
+- docx 9.15.1, jspdf-autotable 5.0.9, React / React DOM 19.3.1, React Router 7.18.5, electron-builder 26.18.1, @electron/rebuild 4.2.1, Tailwind CSS / @tailwindcss/postcss 4.3.4, ESLint 10.14.0, typescript-eslint 8.72.1, and related type, test and build tooling.
+- Verified: build, ESLint, and all 200 tests (including DOCX, XLSX and PDF export tests) pass.
+
+### Notes
+- Remaining 31 moderate findings: the ExcelJS `archiver` / `uuid` chain (ExcelJS 4.4.0 is the latest release, and npm's only offered "fix" is a downgrade to 3.4.0; the `uuid` advisory affects v3/v5/v6 calls with a caller-supplied buffer, which ExcelJS does not use), plus development-only ESLint, Vitest and electron-builder tooling.
+- TypeScript stays at 5.9.3 (typescript-eslint does not yet support 7.x).
+
 ## [1.2.1] - 2026-08-13
 ### Changed
 - Full dependency modernization: Electron 43.4.0, React 19.2.8, React Router 7.18.2, Vite 8.2.1, Vitest 4.1.10, Tailwind CSS 4.3.3, ESLint 10.8.1, current testing/export tooling, and updated type packages.
